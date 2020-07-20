@@ -1,7 +1,6 @@
 package com.rangedroid.sayyidsafo.ui.fragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -10,7 +9,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.ybq.android.spinkit.SpinKitView
 import com.rangedroid.sayyidsafo.R
-import com.rangedroid.sayyidsafo.data.db.model.AudioModel
 import com.rangedroid.sayyidsafo.data.db.model.UnitAudiosModel
 import com.rangedroid.sayyidsafo.ui.adapter.AudiosAdapter
 import kotlinx.coroutines.CoroutineScope
@@ -20,7 +18,6 @@ import kotlinx.coroutines.launch
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.closestKodein
 import org.kodein.di.generic.instance
-import java.util.LinkedHashSet
 import kotlin.coroutines.CoroutineContext
 
 class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, KodeinAware {
@@ -49,10 +46,12 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
         pageViewModel = ViewModelProviders.of(this, viewModelFactory).get(PageViewModel::class.java).apply {
             setIndex(arguments?.getInt(ARG_SECTION_NUMBER) ?: 1)
         }
-//        pageViewModel.text.observe(viewLifecycleOwner, Observer {
-//
-//        })
-        loadData()
+        pageViewModel.text.observe(viewLifecycleOwner, Observer {
+            if (it == 1){
+                loadData()
+            }
+        })
+
     }
 
     private fun loadData() = launch {
@@ -63,7 +62,6 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
     }
 
     private fun bindUI(audioModel: List<UnitAudiosModel>){
-        Log.d("BAG", "F: " + audioModel.size)
         recyclerView.adapter = AudiosAdapter(audioModel)
         recyclerView.visibility = View.VISIBLE
         spinKitView?.visibility = View.GONE

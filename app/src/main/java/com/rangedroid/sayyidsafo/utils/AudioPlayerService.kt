@@ -30,10 +30,11 @@ import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Log
 import com.google.android.exoplayer2.util.Util
-import com.rangedroid.sayyidsafo.data.db.model.UnitAudiosModel
+import com.rangedroid.sayyidsafo.App
 import java.io.File
 import com.rangedroid.sayyidsafo.R
 import com.rangedroid.sayyidsafo.ui.activity.MainActivity
+import com.rangedroid.sayyidsafo.ui.activity.MainActivity.Companion.listAudios
 
 
 class AudioPlayerService : MediaBrowserServiceCompat() {
@@ -41,11 +42,9 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
     companion object {
         const val PLAYBACK_CHANNEL_ID = "playback_channel"
         const val PLAYBACK_NOTIFICATION_ID = 1
-        const val PENDING_INTENT_REQ_CODE = 365
-        const val INDEX = "INDEX"
-        const val LIST = "LIST"
+        const val PENDING_INTENT_REQ_CODE = 100
         const val BINDING_SERVICE = "BINDING_SERVICE"
-
+        const val INDEX = "INDEX"
     }
 
     private var mMediaSession: MediaSessionCompat? = null
@@ -57,7 +56,6 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
     var currentTitle: MutableLiveData<String> = MutableLiveData()
     var isPlaying: MutableLiveData<Boolean> = MutableLiveData()
 
-    var audios: ArrayList<UnitAudiosModel> = ArrayList()
     private val mMediaSessionCallback = object : MediaSessionCompat.Callback() {
 
 
@@ -92,7 +90,7 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
             ) {
                 super.onTracksChanged(trackGroups, trackSelections)
                 try {
-                    audios[mExoPlayer?.currentWindowIndex ?: 0].name.let {
+                    listAudios[mExoPlayer?.currentWindowIndex ?: 0].let {
                         currentTitle.postValue(it)
                     }
 
@@ -148,7 +146,7 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
 
                 override fun getCurrentContentTitle(player: Player): String {
 
-                    return audios[player.currentWindowIndex].name
+                    return listAudios[player.currentWindowIndex]
                 }
 
                 override fun getCurrentLargeIcon(
@@ -213,6 +211,7 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.d("BAG", "onStop")
         stop()
     }
 
@@ -224,8 +223,8 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent != null) {
-            handleIntent(intent)
+        if (intent != null && listAudios.isNotEmpty()){
+            handleIntent(index = intent.getIntExtra(INDEX, 0))
         }
         return Service.START_STICKY
     }
@@ -245,20 +244,16 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
         return super.onBind(intent)
     }
 
-    private fun handleIntent(intent: Intent) {
-        index = intent.getIntExtra(INDEX, 0)
-        audios = intent.getParcelableArrayListExtra(LIST) ?: ArrayList()
-
+    private fun handleIntent(index: Int) {
         val concatMS = ConcatenatingMediaSource()
-        audios.forEach {
+        listAudios.forEach {
             val ms = mExtractorFactory
-                .createMediaSource(Uri.fromFile(File("" + it.getFileName())))
+                .createMediaSource(Uri.fromFile(File(App.DIR_PATH + it)))
             concatMS.addMediaSource(ms)
         }
         mExoPlayer?.prepare(concatMS)
         mExoPlayer?.playWhenReady = true
         mExoPlayer?.seekToDefaultPosition(index)
-
     }
 
     override fun onLoadChildren(

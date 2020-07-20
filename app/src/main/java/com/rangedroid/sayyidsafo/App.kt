@@ -10,6 +10,7 @@ import com.rangedroid.sayyidsafo.data.provider.UnitProviderImpl
 import com.rangedroid.sayyidsafo.data.repository.AudiosRepository
 import com.rangedroid.sayyidsafo.data.repository.AudiosRepositoryImpl
 import com.rangedroid.sayyidsafo.ui.fragment.PageViewModelFactory
+import com.rangedroid.sayyidsafo.utils.AudioPlayerService
 import org.kodein.di.Kodein
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.androidXModule
@@ -38,6 +39,7 @@ class App: Application(), KodeinAware {
         var isDownload: Boolean = false
         const val BASE_URL = "http://5.182.26.44/"
         var DIR_PATH = ""
+        var binder: AudioPlayerService.LocalBinder? = null
     }
 
     override fun onCreate() {

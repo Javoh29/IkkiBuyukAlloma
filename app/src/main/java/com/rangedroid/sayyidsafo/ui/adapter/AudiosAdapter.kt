@@ -2,6 +2,7 @@ package com.rangedroid.sayyidsafo.ui.adapter
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,24 +17,18 @@ import com.downloader.Error
 import com.downloader.OnDownloadListener
 import com.downloader.PRDownloader
 import com.downloader.Status
+import com.google.android.exoplayer2.util.Util
 import com.rangedroid.sayyidsafo.App
 import com.rangedroid.sayyidsafo.R
 import com.rangedroid.sayyidsafo.data.db.model.UnitAudiosModel
-import java.io.File
+import com.rangedroid.sayyidsafo.ui.activity.MainActivity.Companion.connection
+import com.rangedroid.sayyidsafo.ui.activity.MainActivity.Companion.listAudios
+import com.rangedroid.sayyidsafo.utils.AudioPlayerService
 
 class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<AudiosAdapter.AudiosViewHolder>(){
 
     private val listModel: ArrayList<UnitAudiosModel> = ArrayList(audiosModel)
-    private val listDownloaded: ArrayList<String> = ArrayList()
     private var downloadID: Int = 0
-
-    init {
-        File(App.DIR_PATH).walkTopDown().forEach {file ->
-            if (file.name.endsWith(".mp3")){
-                listDownloaded.add(file.name)
-            }
-        }
-    }
 
     class AudiosViewHolder(view: View): RecyclerView.ViewHolder(view){
         val tvTitle: TextView = view.findViewById(R.id.title)
@@ -56,7 +51,6 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
     }
 
     override fun getItemCount(): Int {
-        Log.d("BAG", listModel.size.toString())
         return listModel.size
     }
 
@@ -66,7 +60,7 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
         holder.tvSize.text = String.format("%.2f", listModel[position].size / 1024.0) + "Мб"
         holder.tvDuration.text = getFormattedTime(listModel[position].duration)
 
-        if (listDownloaded.contains(listModel[position].name+".mp3")){
+        if (listAudios.contains(listModel[position].getFileName())){
             holder.download.setImageResource(R.drawable.play)
             holder.download.visibility =  View.VISIBLE
             holder.progressBar.visibility =  View.GONE
@@ -88,10 +82,20 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
     }
 
     private fun startPlay(index: Int, holder: AudiosViewHolder){
-        if (!listDownloaded.contains(listModel[index].name+".mp3")){
+        if (!listAudios.contains(listModel[index].getFileName())){
             startDownload(index, holder)
+        }else{
+            listAudios.forEachIndexed { i, it ->
+                if (it == listModel[index].getFileName()){
+                    Toast.makeText(holder.mContext, "Play $i", Toast.LENGTH_SHORT).show()
+                    val intent = Intent(holder.mContext, AudioPlayerService::class.java)
+                    intent.putExtra(AudioPlayerService.INDEX, i)
+                    intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
+                    holder.mContext.bindService(intent, connection!!, Context.BIND_AUTO_CREATE)
+                    Util.startForegroundService(holder.mContext, intent)
+                }
+            }
         }
-        Toast.makeText(holder.mContext, "Play", Toast.LENGTH_SHORT).show()
     }
 
     private fun startDownload(index: Int, holder: AudiosViewHolder){
@@ -111,7 +115,7 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
                 }
                 .start(object : OnDownloadListener {
                     override fun onDownloadComplete() {
-                        listDownloaded.add(listModel[index].name+".mp3")
+                        listAudios.add(listModel[index].name+".mp3")
                         notifyItemChanged(index)
                     }
 

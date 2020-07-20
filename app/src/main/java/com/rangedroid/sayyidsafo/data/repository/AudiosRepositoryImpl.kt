@@ -18,7 +18,6 @@ class AudiosRepositoryImpl(
     private val unitProvider: UnitProvider
 ) : AudiosRepository {
 
-
     init {
         GlobalScope.launch(Dispatchers.Default) {
             if (unitProvider.isOnline() && !isDownload){
@@ -40,10 +39,12 @@ class AudiosRepositoryImpl(
     }
 
     private fun persistFetchedAudios(audiosResponse: AudioResponse){
-        GlobalScope.launch(Dispatchers.IO) {
-            audiosDao.deleteAudios()
-            audiosResponse.items.forEach {
-                audiosDao.upsertAudios(it)
+        if (!isDownload) {
+            GlobalScope.launch(Dispatchers.IO) {
+                audiosDao.deleteAudios()
+                audiosResponse.items.forEach {
+                    audiosDao.upsertAudios(it)
+                }
             }
             isDownload = true
         }
