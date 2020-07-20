@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Икки буюк Аллома</string>
+    <string name="tab_text_1">Устоз Муҳаммаджон Домла Ҳиндистоний раҳимаҳуллоҳ</string>
+    <string name="tab_text_2">Устоз Абдуллажон маҳдум дада раҳимаҳуллоҳ</string>
+    <string name="download_channel_name">Sayyid Safo yuklab olish</string>
+    <string name="rule">Rule</string>
+    <string name="text_telegram_chanel">Телеграм канал</string>
+    <string name="text_share">Улашиш</string>
+    <string name="text_about">Биз ҳақимизда</string>
+    <string name="text_other_apps">Бизнинг дастурларимиз</string>
+    <string name="root_id">AUDIO_SERVICE_ROOT_ID</string>
+</resources>
