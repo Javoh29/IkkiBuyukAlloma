@@ -87,7 +87,6 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
         }else{
             listAudios.forEachIndexed { i, it ->
                 if (it == listModel[index].getFileName()){
-                    Toast.makeText(holder.mContext, "Play $i", Toast.LENGTH_SHORT).show()
                     val intent = Intent(holder.mContext, AudioPlayerService::class.java)
                     intent.putExtra(AudioPlayerService.INDEX, i)
                     intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)

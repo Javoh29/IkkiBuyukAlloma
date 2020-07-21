@@ -47,9 +47,7 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
             setIndex(arguments?.getInt(ARG_SECTION_NUMBER) ?: 1)
         }
         pageViewModel.text.observe(viewLifecycleOwner, Observer {
-            if (it == 1){
-                loadData()
-            }
+            loadData()
         })
 
     }

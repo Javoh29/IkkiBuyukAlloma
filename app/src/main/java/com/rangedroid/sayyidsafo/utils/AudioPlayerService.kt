@@ -51,7 +51,6 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
     private lateinit var mStateBuilder: PlaybackStateCompat.Builder
     var mExoPlayer: SimpleExoPlayer? = null
     private var notificationManager: PlayerNotificationManager? = null
-    private var index: Int = 0
 
     var currentTitle: MutableLiveData<String> = MutableLiveData()
     var isPlaying: MutableLiveData<Boolean> = MutableLiveData()
@@ -131,7 +130,6 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
             object : PlayerNotificationManager.MediaDescriptionAdapter {
                 override fun createCurrentContentIntent(player: Player): PendingIntent? {
                     val intent = Intent(context, MainActivity::class.java)
-
                     return PendingIntent.getActivity(
                         context,
                         PENDING_INTENT_REQ_CODE,
@@ -233,7 +231,9 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
 
     inner class LocalBinder : Binder() {
         // Return this instance of LocalService so clients can call public methods
-        fun getService(): AudioPlayerService = this@AudioPlayerService
+        fun getService(): AudioPlayerService {
+            return this@AudioPlayerService
+        }
     }
 
     override fun onBind(intent: Intent?): IBinder? {
