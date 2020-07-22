@@ -13,7 +13,6 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import com.google.android.material.tabs.TabLayout
 import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +22,7 @@ import com.google.android.exoplayer2.ui.PlayerControlView
 import com.google.android.exoplayer2.util.Util
 import com.rangedroid.sayyidsafo.App
 import com.rangedroid.sayyidsafo.App.Companion.binder
+import com.rangedroid.sayyidsafo.App.Companion.connection
 import com.rangedroid.sayyidsafo.BuildConfig
 import com.rangedroid.sayyidsafo.R
 import com.rangedroid.sayyidsafo.data.provider.UnitProvider
@@ -51,7 +51,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
 
     companion object {
         var listAudios: ArrayList<String> = ArrayList()
-        var connection: ServiceConnection? = null
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -106,7 +105,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
 
             override fun onServiceConnected(p0: ComponentName?, service: IBinder?) {
                 binder = service as AudioPlayerService.LocalBinder
-//                binder?.setActivity(this@MainActivity)
                 playerView.player = binder?.getService()?.mExoPlayer
                 if (isStart){
                     playerView.player.let {
@@ -212,17 +210,25 @@ class MainActivity : AppCompatActivity(), KodeinAware {
                 intent.data = Uri.parse(getString(R.string.our_app))
                 startActivity(intent)
             }
+            R.id.btn_question -> {
+                startActivity(Intent(this@MainActivity, InfoActivity::class.java))
+            }
         }
         return true
     }
 
-//    override fun onStop() {
-//        super.onStop()
-//        if (mBound && connection != null) {
-//            unbindService(connection!!)
-//            mBound = false
-//        }
-//    }
+    override fun onStop() {
+        super.onStop()
+        if (mBound) {
+            try {
+                unbindService(connection!!)
+                mBound = false
+            }catch (e: Exception){
+
+            }
+
+        }
+    }
 
     override fun onDestroy() {
         unitProvider.setSavedAudio(

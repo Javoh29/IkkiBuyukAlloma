@@ -37,7 +37,7 @@
                 android:textColor="@android:color/white"
                 android:fontFamily="@font/lobster"
                 android:layout_marginStart="30dp"
-                android:textSize="16sp"/>
+                android:textSize="14sp"/>
         </FrameLayout>
 
     </androidx.appcompat.widget.Toolbar>

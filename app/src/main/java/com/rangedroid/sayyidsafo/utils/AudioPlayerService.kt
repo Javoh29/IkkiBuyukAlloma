@@ -244,7 +244,7 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
         return super.onBind(intent)
     }
 
-    private fun handleIntent(index: Int) {
+    fun handleIntent(index: Int) {
         val concatMS = ConcatenatingMediaSource()
         listAudios.forEach {
             val ms = mExtractorFactory

@@ -9,7 +9,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
@@ -19,9 +18,10 @@ import com.downloader.PRDownloader
 import com.downloader.Status
 import com.google.android.exoplayer2.util.Util
 import com.rangedroid.sayyidsafo.App
+import com.rangedroid.sayyidsafo.App.Companion.binder
+import com.rangedroid.sayyidsafo.App.Companion.connection
 import com.rangedroid.sayyidsafo.R
 import com.rangedroid.sayyidsafo.data.db.model.UnitAudiosModel
-import com.rangedroid.sayyidsafo.ui.activity.MainActivity.Companion.connection
 import com.rangedroid.sayyidsafo.ui.activity.MainActivity.Companion.listAudios
 import com.rangedroid.sayyidsafo.utils.AudioPlayerService
 
@@ -29,6 +29,8 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
 
     private val listModel: ArrayList<UnitAudiosModel> = ArrayList(audiosModel)
     private var downloadID: Int = 0
+    private var isPause: Boolean = false
+    private var isPos: Int = 0
 
     class AudiosViewHolder(view: View): RecyclerView.ViewHolder(view){
         val tvTitle: TextView = view.findViewById(R.id.title)
@@ -87,11 +89,25 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
         }else{
             listAudios.forEachIndexed { i, it ->
                 if (it == listModel[index].getFileName()){
-                    val intent = Intent(holder.mContext, AudioPlayerService::class.java)
-                    intent.putExtra(AudioPlayerService.INDEX, i)
-                    intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
-                    holder.mContext.bindService(intent, connection!!, Context.BIND_AUTO_CREATE)
-                    Util.startForegroundService(holder.mContext, intent)
+                    isPause = if (isPause){
+                        holder.download.setImageResource(R.drawable.play)
+                        binder?.getService()?.mExoPlayer.let {
+                            it?.playWhenReady = !it?.playWhenReady!!
+                        }
+                        isPos = index
+                        false
+                    }else{
+                        holder.download.setImageResource(R.drawable.stop)
+                        if (isPos == index){
+                            binder?.getService()?.mExoPlayer.let {
+                                it?.playWhenReady = !it?.playWhenReady!!
+                            }
+                            isPos = index
+                        }else{
+                            binder?.getService()?.handleIntent(i)
+                        }
+                        true
+                    }
                 }
             }
         }
@@ -116,6 +132,13 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
                     override fun onDownloadComplete() {
                         listAudios.add(listModel[index].name+".mp3")
                         notifyItemChanged(index)
+                        if (listAudios.size == 1){
+                            val intent = Intent(holder.mContext, AudioPlayerService::class.java)
+                            intent.putExtra(AudioPlayerService.INDEX, 0)
+                            intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
+                            holder.mContext.bindService(intent, connection!!, Context.BIND_AUTO_CREATE)
+                            Util.startForegroundService(holder.mContext, intent)
+                        }
                     }
 
                     override fun onError(error: Error?) {
