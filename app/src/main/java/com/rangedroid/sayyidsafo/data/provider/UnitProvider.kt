@@ -6,4 +6,6 @@ interface UnitProvider {
     fun getSavedAudio(): String
 
     fun setSavedAudio(audio: String)
+
+    val text: String
 }

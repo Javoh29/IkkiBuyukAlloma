@@ -51,6 +51,6 @@ class AudiosRepositoryImpl(
     }
 
     private suspend fun fetchAudios(){
-        audiosNetworkDataSource.fetchAudios(1, 1)
+        audiosNetworkDataSource.fetchAudios(8, 1)
     }
 }

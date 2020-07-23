@@ -29,4 +29,7 @@ class UnitProviderImpl(private val context: Context) : PreferenceProvider(contex
     override fun setSavedAudio(audio: String) {
         preferences.edit().putString(audioSaved, audio).apply()
     }
+
+    override val text: String
+        get() = preferences.getString(audioSaved, "not")!!
 }

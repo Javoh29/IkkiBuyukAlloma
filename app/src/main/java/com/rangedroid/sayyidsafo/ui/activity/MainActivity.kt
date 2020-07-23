@@ -8,6 +8,7 @@ import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -18,12 +19,12 @@ import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
+import com.google.android.exoplayer2.ui.BuildConfig
 import com.google.android.exoplayer2.ui.PlayerControlView
 import com.google.android.exoplayer2.util.Util
 import com.rangedroid.sayyidsafo.App
 import com.rangedroid.sayyidsafo.App.Companion.binder
 import com.rangedroid.sayyidsafo.App.Companion.connection
-import com.rangedroid.sayyidsafo.BuildConfig
 import com.rangedroid.sayyidsafo.R
 import com.rangedroid.sayyidsafo.data.provider.UnitProvider
 import com.rangedroid.sayyidsafo.ui.adapter.SectionsPagerAdapter
@@ -98,6 +99,19 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             }
         }
 
+        Log.d("BAG", unitProvider.getSavedAudio())
+        if (unitProvider.getSavedAudio() != "not"){
+            listAudios.forEachIndexed { i, it ->
+                if (it == unitProvider.getSavedAudio()){
+                    val intent = Intent(this, AudioPlayerService::class.java)
+                    intent.putExtra(AudioPlayerService.INDEX, i)
+                    intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
+                    bindService(intent, connection!!, Context.BIND_AUTO_CREATE)
+                    Util.startForegroundService(this, intent)
+                }
+            }
+        }
+
         connection = object : ServiceConnection{
             override fun onServiceDisconnected(p0: ComponentName?) {
                 mBound = false
@@ -114,8 +128,8 @@ class MainActivity : AppCompatActivity(), KodeinAware {
                 }
                 mBound = true
                 binder?.getService()?.currentTitle?.observe(this@MainActivity, Observer {
-                tvTitle.text = it
-                audioTitle.text = it
+                tvTitle.text = it.substring(0, it.length-3)
+                audioTitle.text = it.substring(0, it.length-3)
             })
                 binder?.getService()?.isPlaying?.observe(this@MainActivity, Observer {
                 if (it) {
@@ -128,23 +142,12 @@ class MainActivity : AppCompatActivity(), KodeinAware {
 
         }
 
-        if (unitProvider.getSavedAudio() != "not"){
-            listAudios.forEachIndexed { i, it ->
-                if (it == unitProvider.getSavedAudio()){
-                    val intent = Intent(this, AudioPlayerService::class.java)
-                    intent.putExtra(AudioPlayerService.INDEX, i)
-                    intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
-                    bindService(intent, connection!!, Context.BIND_AUTO_CREATE)
-                    Util.startForegroundService(this, intent)
-                }
-            }
-        }
-
         if (binder != null){
             playerView.player = binder?.getService()?.mExoPlayer
             binder?.getService()?.currentTitle?.observe(this@MainActivity, Observer {
-                tvTitle.text = it
-                audioTitle.text = it
+                Log.d("BAG", it)
+                tvTitle.text = it.substring(0, it.length-3)
+                audioTitle.text = it.subSequence(0, it.length-3)
             })
             binder?.getService()?.isPlaying?.observe(this@MainActivity, Observer {
                 if (it) {
@@ -174,6 +177,7 @@ class MainActivity : AppCompatActivity(), KodeinAware {
                 it.playWhenReady = !it.playWhenReady
             }
         }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -218,6 +222,9 @@ class MainActivity : AppCompatActivity(), KodeinAware {
     }
 
     override fun onStop() {
+        unitProvider.setSavedAudio(
+            audio = tvTitle.text.toString()
+        )
         super.onStop()
         if (mBound) {
             try {
@@ -228,13 +235,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             }
 
         }
-    }
-
-    override fun onDestroy() {
-        unitProvider.setSavedAudio(
-            audio = tvTitle.text.toString()
-        )
-        super.onDestroy()
     }
 
     override fun onBackPressed() {

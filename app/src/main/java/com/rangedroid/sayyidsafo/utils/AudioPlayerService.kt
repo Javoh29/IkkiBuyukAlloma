@@ -72,10 +72,8 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
         mExoPlayer?.addListener(object : Player.EventListener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                 if (playWhenReady && playbackState == STATE_READY) {
-                    Log.d("EXO_COMMAND", "Playin")
                     isPlaying.postValue(true)
                 } else if (playWhenReady) {
-                    Log.d("EXO_COMMAND", "Buffered")
                     isPlaying.postValue(true)
                 } else {
                     updatePlaybackState(PlaybackState.STATE_PAUSED)
@@ -209,7 +207,6 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("BAG", "onStop")
         stop()
     }
 

@@ -30,7 +30,8 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
     private val listModel: ArrayList<UnitAudiosModel> = ArrayList(audiosModel)
     private var downloadID: Int = 0
     private var isPause: Boolean = false
-    private var isPos: Int = 0
+    private var isPos: Int = 1000
+    private var isName: String = ""
 
     class AudiosViewHolder(view: View): RecyclerView.ViewHolder(view){
         val tvTitle: TextView = view.findViewById(R.id.title)
@@ -89,12 +90,18 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
         }else{
             listAudios.forEachIndexed { i, it ->
                 if (it == listModel[index].getFileName()){
+                    if (isName != listModel[index].getFileName()){
+                        isName = it
+                        notifyItemChanged(isPos)
+                        Log.d("BAG", "1: Pos: $isPos")
+                        isPos = 1000
+                    }
                     isPause = if (isPause){
                         holder.download.setImageResource(R.drawable.play)
                         binder?.getService()?.mExoPlayer.let {
                             it?.playWhenReady = !it?.playWhenReady!!
                         }
-                        isPos = index
+                        Log.d("BAG", "2")
                         false
                     }else{
                         holder.download.setImageResource(R.drawable.stop)
@@ -102,12 +109,26 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
                             binder?.getService()?.mExoPlayer.let {
                                 it?.playWhenReady = !it?.playWhenReady!!
                             }
-                            isPos = index
+                            Log.d("BAG", "3")
                         }else{
                             binder?.getService()?.handleIntent(i)
+                            Log.d("BAG", "4")
                         }
                         true
                     }
+                    binder?.getService()?.isPlaying?.observeForever {
+                        if (it == null) return@observeForever
+                        isPause = if (it){
+                            holder.download.setImageResource(R.drawable.stop)
+                            Log.d("BAG", "5")
+                            true
+                        }else{
+                            holder.download.setImageResource(R.drawable.play)
+                            Log.d("BAG", "6")
+                            false
+                        }
+                    }
+                    isPos = index
                 }
             }
         }
