@@ -21,7 +21,7 @@ class AudiosRepositoryImpl(
     init {
         GlobalScope.launch(Dispatchers.Default) {
             if (unitProvider.isOnline() && !isDownload){
-                fetchAudios()
+                fetchAudios(1)
             }
         }
         audiosNetworkDataSource.apply {
@@ -38,10 +38,15 @@ class AudiosRepositoryImpl(
         }
     }
 
+    override suspend fun getFirst(): LiveData<UnitAudiosModel> {
+        return withContext(Dispatchers.IO){
+            return@withContext audiosDao.getFirst()
+        }
+    }
+
     private fun persistFetchedAudios(audiosResponse: AudioResponse){
         if (!isDownload) {
             GlobalScope.launch(Dispatchers.IO) {
-                audiosDao.deleteAudios()
                 audiosResponse.items.forEach {
                     audiosDao.upsertAudios(it)
                 }
@@ -50,7 +55,10 @@ class AudiosRepositoryImpl(
         }
     }
 
-    private suspend fun fetchAudios(){
-        audiosNetworkDataSource.fetchAudios(8, 1)
+    private suspend fun fetchAudios(size: Int){
+        audiosDao.deleteAudios()
+        for (i: Int in 1..size){
+            audiosNetworkDataSource.fetchAudios(8, i)
+        }
     }
 }

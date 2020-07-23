@@ -49,7 +49,6 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
         pageViewModel.text.observe(viewLifecycleOwner, Observer {
             loadData()
         })
-
     }
 
     private fun loadData() = launch {

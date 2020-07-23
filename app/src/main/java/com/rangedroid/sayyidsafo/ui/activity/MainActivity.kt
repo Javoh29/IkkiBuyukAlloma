@@ -99,19 +99,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             }
         }
 
-        Log.d("BAG", unitProvider.getSavedAudio())
-        if (unitProvider.getSavedAudio() != "not"){
-            listAudios.forEachIndexed { i, it ->
-                if (it == unitProvider.getSavedAudio()){
-                    val intent = Intent(this, AudioPlayerService::class.java)
-                    intent.putExtra(AudioPlayerService.INDEX, i)
-                    intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
-                    bindService(intent, connection!!, Context.BIND_AUTO_CREATE)
-                    Util.startForegroundService(this, intent)
-                }
-            }
-        }
-
         connection = object : ServiceConnection{
             override fun onServiceDisconnected(p0: ComponentName?) {
                 mBound = false
@@ -128,8 +115,8 @@ class MainActivity : AppCompatActivity(), KodeinAware {
                 }
                 mBound = true
                 binder?.getService()?.currentTitle?.observe(this@MainActivity, Observer {
-                tvTitle.text = it.substring(0, it.length-3)
-                audioTitle.text = it.substring(0, it.length-3)
+                tvTitle.text = it.substring(0, it.length-4)
+                audioTitle.text = it.substring(0, it.length-4)
             })
                 binder?.getService()?.isPlaying?.observe(this@MainActivity, Observer {
                 if (it) {
@@ -146,8 +133,8 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             playerView.player = binder?.getService()?.mExoPlayer
             binder?.getService()?.currentTitle?.observe(this@MainActivity, Observer {
                 Log.d("BAG", it)
-                tvTitle.text = it.substring(0, it.length-3)
-                audioTitle.text = it.subSequence(0, it.length-3)
+                tvTitle.text = it.substring(0, it.length-4)
+                audioTitle.text = it.subSequence(0, it.length-4)
             })
             binder?.getService()?.isPlaying?.observe(this@MainActivity, Observer {
                 if (it) {
@@ -156,6 +143,22 @@ class MainActivity : AppCompatActivity(), KodeinAware {
                     playButton.setImageResource(R.drawable.ic_play_circled)
                 }
             })
+        }
+
+        Log.d("BAG", unitProvider.getSavedAudio())
+        if (unitProvider.getSavedAudio().length > 5){
+            listAudios.forEachIndexed { i, it ->
+                if (it == unitProvider.getSavedAudio()){
+                    val intent = Intent(this, AudioPlayerService::class.java)
+                    intent.putExtra(AudioPlayerService.INDEX, i)
+                    intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
+                    bindService(intent, connection!!, Context.BIND_AUTO_CREATE)
+                    Util.startForegroundService(this, intent)
+                    binder?.getService()?.mExoPlayer.let {
+                        it?.playWhenReady = !it?.playWhenReady!!
+                    }
+                }
+            }
         }
     }
 
@@ -222,9 +225,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
     }
 
     override fun onStop() {
-        unitProvider.setSavedAudio(
-            audio = tvTitle.text.toString()
-        )
         super.onStop()
         if (mBound) {
             try {
@@ -235,6 +235,13 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             }
 
         }
+    }
+
+    override fun onDestroy() {
+        unitProvider.setSavedAudio(
+            audio = tvTitle.text.toString() + ".mp3"
+        )
+        super.onDestroy()
     }
 
     override fun onBackPressed() {

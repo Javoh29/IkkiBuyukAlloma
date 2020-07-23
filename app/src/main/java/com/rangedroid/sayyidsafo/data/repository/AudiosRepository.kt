@@ -5,4 +5,5 @@ import com.rangedroid.sayyidsafo.data.db.model.UnitAudiosModel
 
 interface AudiosRepository {
     suspend fun getAudios(): LiveData<List<UnitAudiosModel>>
+    suspend fun getFirst(): LiveData<UnitAudiosModel>
 }
