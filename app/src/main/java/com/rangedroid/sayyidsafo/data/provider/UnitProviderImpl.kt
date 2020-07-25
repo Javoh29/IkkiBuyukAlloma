@@ -8,6 +8,7 @@ import java.net.InetAddress
 class UnitProviderImpl(private val context: Context) : PreferenceProvider(context), UnitProvider {
 
     private val audioSaved = "AUDIO_SAVED"
+    private val audioTime = "AUDIO_TIME"
 
     override fun isOnline(): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
@@ -30,6 +31,11 @@ class UnitProviderImpl(private val context: Context) : PreferenceProvider(contex
         preferences.edit().putString(audioSaved, audio).apply()
     }
 
-    override val text: String
-        get() = preferences.getString(audioSaved, "not")!!
+    override fun getSavedTime(): String {
+        return preferences.getString(audioTime, "not")!!
+    }
+
+    override fun setSavedTime(time: String) {
+        preferences.edit().putString(audioTime, time).apply()
+    }
 }

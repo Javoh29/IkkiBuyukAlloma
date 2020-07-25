@@ -19,6 +19,6 @@ interface AudiosDao {
     @Query("DELETE FROM audios_table")
     fun deleteAudios()
 
-    @Query("select * from audios_table where id == 733")
-    fun getFirst(): LiveData<UnitAudiosModel>
+    @Query("select * from audios_table where id == :index")
+    fun getFirst(index: Int): LiveData<UnitAudiosModel>
 }

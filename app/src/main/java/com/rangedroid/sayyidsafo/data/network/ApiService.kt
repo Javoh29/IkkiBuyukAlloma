@@ -13,7 +13,10 @@ import retrofit2.http.Query
 
 interface ApiService {
     @GET("audios")
-    fun getAudiosAsync(@Query("topic_id") topicID: Int, @Query("page") pageNumber: Int): Deferred<AudioResponse>
+    fun getAudiosAsync(
+        @Query("topic_id") topicID: Int,
+        @Query("page") pageNumber: Int
+    ): Deferred<AudioResponse>
 
     companion object {
         operator fun invoke(

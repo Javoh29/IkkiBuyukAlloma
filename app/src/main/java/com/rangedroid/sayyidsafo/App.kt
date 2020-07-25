@@ -10,6 +10,7 @@ import com.rangedroid.sayyidsafo.data.provider.UnitProvider
 import com.rangedroid.sayyidsafo.data.provider.UnitProviderImpl
 import com.rangedroid.sayyidsafo.data.repository.AudiosRepository
 import com.rangedroid.sayyidsafo.data.repository.AudiosRepositoryImpl
+import com.rangedroid.sayyidsafo.ui.fragment.InfoViewModelFactory
 import com.rangedroid.sayyidsafo.ui.fragment.PageViewModelFactory
 import com.rangedroid.sayyidsafo.utils.AudioPlayerService
 import org.kodein.di.Kodein
@@ -34,6 +35,7 @@ class App: Application(), KodeinAware {
             bind<AudioNetworkDataSource>() with singleton { AudioNetworkDataSourceImpl(instance()) }
             bind<AudiosRepository>() with singleton { AudiosRepositoryImpl(instance(), instance(), instance()) }
             bind() from provider { PageViewModelFactory(instance()) }
+            bind() from provider { InfoViewModelFactory(instance()) }
         }
 
     companion object {

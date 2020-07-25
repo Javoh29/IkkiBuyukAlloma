@@ -18,16 +18,19 @@ class AudiosRepositoryImpl(
     private val unitProvider: UnitProvider
 ) : AudiosRepository {
 
+    private var isLoaded: Boolean = false
+
     init {
-        GlobalScope.launch(Dispatchers.Default) {
-            if (unitProvider.isOnline() && !isDownload){
-                fetchAudios(1)
-            }
-        }
+        fetchAudios(1)
         audiosNetworkDataSource.apply {
             downloadedAudios.observeForever {
                 if (it == null) return@observeForever
-                persistFetchedAudios(it)
+                if (isLoaded){
+                    isLoaded = false
+                    fetchAudios(it._meta.pageCount)
+                }else{
+                    persistFetchedAudios(it)
+                }
             }
         }
     }
@@ -38,27 +41,33 @@ class AudiosRepositoryImpl(
         }
     }
 
-    override suspend fun getFirst(): LiveData<UnitAudiosModel> {
+    override suspend fun getFirst(index: Int): LiveData<UnitAudiosModel> {
         return withContext(Dispatchers.IO){
-            return@withContext audiosDao.getFirst()
+            return@withContext audiosDao.getFirst(index)
         }
     }
 
     private fun persistFetchedAudios(audiosResponse: AudioResponse){
-        if (!isDownload) {
-            GlobalScope.launch(Dispatchers.IO) {
-                audiosResponse.items.forEach {
-                    audiosDao.upsertAudios(it)
-                }
+        GlobalScope.launch(Dispatchers.IO) {
+            audiosResponse.items.forEach {
+                audiosDao.upsertAudios(it)
             }
-            isDownload = true
         }
     }
 
-    private suspend fun fetchAudios(size: Int){
-        audiosDao.deleteAudios()
-        for (i: Int in 1..size){
-            audiosNetworkDataSource.fetchAudios(8, i)
+    private fun fetchAudios(size: Int){
+        GlobalScope.launch(Dispatchers.Default){
+            if (unitProvider.isOnline() && !isDownload){
+                audiosDao.deleteAudios()
+                if (size > 1){
+                    isDownload = true
+                }else{
+                    isLoaded = true
+                }
+                for (i: Int in 1..size){
+                    audiosNetworkDataSource.fetchAudios(8, i)
+                }
+            }
         }
     }
 }

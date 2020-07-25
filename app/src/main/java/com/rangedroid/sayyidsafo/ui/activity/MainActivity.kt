@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.os.IBinder
 import android.util.Log
 import android.view.Menu
@@ -37,6 +38,7 @@ import org.kodein.di.generic.instance
 import org.kodein.di.android.kodein
 import java.io.File
 
+@Suppress("DEPRECATION")
 class MainActivity : AppCompatActivity(), KodeinAware {
 
     override val kodein by kodein()
@@ -87,8 +89,8 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE),
             1
         )
-        App.DIR_PATH = getExternalFilesDir(null)?.path ?: ""
-        App.DIR_PATH += "/"
+        App.DIR_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
+        App.DIR_PATH += "/IkkiBuyukAlloma/"
     }
 
     private fun setConnect(){
@@ -107,6 +109,9 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             override fun onServiceConnected(p0: ComponentName?, service: IBinder?) {
                 binder = service as AudioPlayerService.LocalBinder
                 playerView.player = binder?.getService()?.mExoPlayer
+                if (unitProvider.getSavedTime() != "not"){
+                    playerView.player.seekTo(unitProvider.getSavedTime().toLong())
+                }
                 if (isStart){
                     playerView.player.let {
                         it.playWhenReady = !it.playWhenReady
@@ -132,7 +137,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         if (binder != null){
             playerView.player = binder?.getService()?.mExoPlayer
             binder?.getService()?.currentTitle?.observe(this@MainActivity, Observer {
-                Log.d("BAG", it)
                 tvTitle.text = it.substring(0, it.length-4)
                 audioTitle.text = it.subSequence(0, it.length-4)
             })
@@ -154,10 +158,15 @@ class MainActivity : AppCompatActivity(), KodeinAware {
                     intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
                     bindService(intent, connection!!, Context.BIND_AUTO_CREATE)
                     Util.startForegroundService(this, intent)
-                    binder?.getService()?.mExoPlayer.let {
-                        it?.playWhenReady = !it?.playWhenReady!!
-                    }
                 }
+            }
+        }else{
+            if (listAudios.isNotEmpty()){
+                val intent = Intent(this, AudioPlayerService::class.java)
+                intent.putExtra(AudioPlayerService.INDEX, 1)
+                intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
+                bindService(intent, connection!!, Context.BIND_AUTO_CREATE)
+                Util.startForegroundService(this, intent)
             }
         }
     }
@@ -240,6 +249,9 @@ class MainActivity : AppCompatActivity(), KodeinAware {
     override fun onDestroy() {
         unitProvider.setSavedAudio(
             audio = tvTitle.text.toString() + ".mp3"
+        )
+        unitProvider.setSavedTime(
+            time = playerView.player.contentPosition.toString()
         )
         super.onDestroy()
     }

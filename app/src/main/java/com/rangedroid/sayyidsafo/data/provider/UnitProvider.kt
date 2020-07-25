@@ -7,5 +7,7 @@ interface UnitProvider {
 
     fun setSavedAudio(audio: String)
 
-    val text: String
+    fun getSavedTime(): String
+
+    fun setSavedTime(time: String)
 }

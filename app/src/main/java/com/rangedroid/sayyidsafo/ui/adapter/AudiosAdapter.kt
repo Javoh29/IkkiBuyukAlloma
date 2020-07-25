@@ -30,19 +30,7 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
     private val listModel: ArrayList<UnitAudiosModel> = ArrayList(audiosModel)
     private var downloadID: Int = 0
     private var isPlay: Int = 1000
-
-    init {
-        binder?.getService()?.isPlaying?.observeForever {
-            if (it == null) return@observeForever
-            if (it){
-                isPlay = listAudios.lastIndexOf(binder?.getService()?.currentTitle?.value + ".mp3")
-                notifyDataSetChanged()
-            }else{
-                isPlay = 1000
-                notifyDataSetChanged()
-            }
-        }
-    }
+    private var isName: String = ""
 
     class AudiosViewHolder(view: View): RecyclerView.ViewHolder(view){
         val tvTitle: TextView = view.findViewById(R.id.title)
@@ -71,7 +59,7 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: AudiosViewHolder, position: Int) {
         holder.tvTitle.text = listModel[position].name
-        holder.tvSize.text = String.format("%.2f", listModel[position].size / 1024.0) + "Мб"
+        holder.tvSize.text = String.format("%.2f", listModel[position].size / 1000.0) + "Мб"
         holder.tvDuration.text = getFormattedTime(listModel[position].duration)
 
         if (listAudios.contains(listModel[position].getFileName())){
@@ -102,10 +90,32 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
         if (!listAudios.contains(listModel[index].getFileName())){
             startDownload(index, holder)
         }else{
-            listAudios.forEachIndexed { i, it ->
-                if (it == listModel[index].getFileName()){
-                    binder?.getService()?.handleIntent(i)
+            if (isName != listModel[index].name){
+                isName = listModel[index].name
+                listAudios.forEachIndexed { i, it ->
+                    if (it == listModel[index].getFileName()){
+                        binder?.getService()?.handleIntent(i)
+                    }
                 }
+            }else{
+                binder?.getService()?.mExoPlayer.let {
+                    it?.playWhenReady = !it?.playWhenReady!!
+                }
+                notifyDataSetChanged()
+            }
+            changePlay(index)
+        }
+    }
+
+    private fun changePlay(index: Int){
+        binder?.getService()?.isPlaying?.observeForever {
+            if (it == null) return@observeForever
+            if (it){
+                isPlay = index
+                notifyDataSetChanged()
+            }else{
+                isPlay = 1000
+                notifyDataSetChanged()
             }
         }
     }
@@ -127,7 +137,7 @@ class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<A
                 }
                 .start(object : OnDownloadListener {
                     override fun onDownloadComplete() {
-                        listAudios.add(listModel[index].name+".mp3")
+                        listAudios.add(listModel[index].getFileName())
                         notifyItemChanged(index)
                         if (listAudios.size == 1){
                             val intent = Intent(holder.mContext, AudioPlayerService::class.java)
