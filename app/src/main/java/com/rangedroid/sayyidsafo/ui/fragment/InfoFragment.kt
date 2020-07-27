@@ -57,6 +57,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
     private lateinit var mediaPlayer: MediaPlayer
     private lateinit var seekBar: SeekBar
     private lateinit var btnPlay: AppCompatImageView
+    private lateinit var imgInfo: AppCompatImageView
     private lateinit var tvStartTime: TextView
     private lateinit var tvEndTime: TextView
     private lateinit var progressBar: ProgressBar
@@ -71,30 +72,41 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
         job = Job()
         tvInfo = view.findViewById(R.id.tv_info)
         btnPlay = view.findViewById(R.id.info_play)
+        imgInfo = view.findViewById(R.id.img_info)
         tvStartTime = view.findViewById(R.id.tv_start_time)
         tvEndTime = view.findViewById(R.id.tv_end_time)
         seekBar = view.findViewById(R.id.seekBar)
         seekBar.isClickable = false
         progressBar = view.findViewById(R.id.progress)
+        mediaPlayer = MediaPlayer()
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        viewModel = ViewModelProviders.of(this, viewModelFactory).get(InfoViewModel::class.java)
-        loadData()
-    }
-
-    private fun loadData() = launch{
-        viewModel.getFirst().value.await().observe(viewLifecycleOwner, Observer {
-            if (it == null) return@Observer
-            Log.d("BAG", it.name)
-            bindUI(it)
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(InfoViewModel::class.java).apply {
+            setIndex(arguments?.getInt(InfoFragment.ARG_SECTION_NUMBER) ?: 1)
+        }
+        viewModel.text.observe(viewLifecycleOwner, Observer {
+            loadData(it)
         })
     }
 
-    private fun bindUI(model: AudioModel){
+    private fun loadData(index: Int) = launch{
+        viewModel.getFirst().value.await().observe(viewLifecycleOwner, Observer {
+            if (it == null) return@Observer
+            bindUI(it, index)
+        })
+    }
+
+    private fun bindUI(model: AudioModel, index: Int){
         try {
-            val inputStream: InputStream? = context?.assets?.open("info_text_one.txt")
+            val inputStream: InputStream? = if (index == 1){
+                imgInfo.setImageResource(R.drawable.info_1)
+                context?.assets?.open("info_text_one.txt")
+            }else{
+                imgInfo.setImageResource(R.drawable.info_2)
+                context?.assets?.open("info_text_two.txt")
+            }
             val buffer = ByteArray(inputStream?.available()!!)
             inputStream.read(buffer)
             tvInfo.text = String(buffer)
