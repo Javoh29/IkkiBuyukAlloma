@@ -1,7 +1,5 @@
 package com.rangedroid.sayyidsafo.ui.fragment
 
-import android.content.Context
-import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
 import androidx.lifecycle.ViewModelProviders
@@ -21,7 +19,7 @@ import com.downloader.PRDownloader
 import com.downloader.Status
 import com.rangedroid.sayyidsafo.App
 import com.rangedroid.sayyidsafo.R
-import com.rangedroid.sayyidsafo.data.db.model.UnitAudiosModel
+import com.rangedroid.sayyidsafo.data.db.model.AudioModel
 import com.rangedroid.sayyidsafo.ui.activity.MainActivity.Companion.listAudios
 import kotlinx.coroutines.*
 import org.kodein.di.KodeinAware
@@ -94,7 +92,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
         })
     }
 
-    private fun bindUI(model: UnitAudiosModel){
+    private fun bindUI(model: AudioModel){
         try {
             val inputStream: InputStream? = context?.assets?.open("info_text_one.txt")
             val buffer = ByteArray(inputStream?.available()!!)

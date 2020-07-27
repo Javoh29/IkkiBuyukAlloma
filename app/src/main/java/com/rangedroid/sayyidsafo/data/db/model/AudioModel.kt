@@ -22,4 +22,8 @@ data class AudioModel(
     val size: Long,
     @SerializedName("duration")
     val duration: Long
-)
+){
+    fun getFileName(): String {
+        return "$name.mp3"
+    }
+}

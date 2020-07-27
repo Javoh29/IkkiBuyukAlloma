@@ -3,7 +3,7 @@ package com.rangedroid.sayyidsafo.data.repository
 import androidx.lifecycle.LiveData
 import com.rangedroid.sayyidsafo.App.Companion.isDownload
 import com.rangedroid.sayyidsafo.data.db.AudiosDao
-import com.rangedroid.sayyidsafo.data.db.model.UnitAudiosModel
+import com.rangedroid.sayyidsafo.data.db.model.AudioModel
 import com.rangedroid.sayyidsafo.data.network.AudioNetworkDataSource
 import com.rangedroid.sayyidsafo.data.network.response.AudioResponse
 import com.rangedroid.sayyidsafo.data.provider.UnitProvider
@@ -35,13 +35,13 @@ class AudiosRepositoryImpl(
         }
     }
 
-    override suspend fun getAudios(): LiveData<List<UnitAudiosModel>> {
+    override suspend fun getAudios(): LiveData<List<AudioModel>> {
         return withContext(Dispatchers.IO){
             return@withContext audiosDao.getAudios()
         }
     }
 
-    override suspend fun getFirst(index: Int): LiveData<UnitAudiosModel> {
+    override suspend fun getFirst(index: Int): LiveData<AudioModel> {
         return withContext(Dispatchers.IO){
             return@withContext audiosDao.getFirst(index)
         }

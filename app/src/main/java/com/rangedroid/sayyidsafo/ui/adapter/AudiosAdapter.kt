@@ -21,13 +21,13 @@ import com.rangedroid.sayyidsafo.App
 import com.rangedroid.sayyidsafo.App.Companion.binder
 import com.rangedroid.sayyidsafo.App.Companion.connection
 import com.rangedroid.sayyidsafo.R
-import com.rangedroid.sayyidsafo.data.db.model.UnitAudiosModel
+import com.rangedroid.sayyidsafo.data.db.model.AudioModel
 import com.rangedroid.sayyidsafo.ui.activity.MainActivity.Companion.listAudios
 import com.rangedroid.sayyidsafo.utils.AudioPlayerService
 
-class AudiosAdapter(audiosModel: List<UnitAudiosModel>) : RecyclerView.Adapter<AudiosAdapter.AudiosViewHolder>(){
+class AudiosAdapter(audiosModel: List<AudioModel>) : RecyclerView.Adapter<AudiosAdapter.AudiosViewHolder>(){
 
-    private val listModel: ArrayList<UnitAudiosModel> = ArrayList(audiosModel)
+    private val listModel: ArrayList<AudioModel> = ArrayList(audiosModel)
     private var downloadID: Int = 0
     private var isPlay: Int = 1000
     private var isName: String = ""

@@ -6,7 +6,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.rangedroid.sayyidsafo.data.db.model.AudioModel
-import com.rangedroid.sayyidsafo.data.db.model.UnitAudiosModel
 
 @Dao
 interface AudiosDao {
@@ -14,11 +13,11 @@ interface AudiosDao {
     fun upsertAudios(audioModel: AudioModel)
 
     @Query("SELECT * from audios_table")
-    fun getAudios(): LiveData<List<UnitAudiosModel>>
+    fun getAudios(): LiveData<List<AudioModel>>
 
     @Query("DELETE FROM audios_table")
     fun deleteAudios()
 
     @Query("select * from audios_table where id == :index")
-    fun getFirst(index: Int): LiveData<UnitAudiosModel>
+    fun getFirst(index: Int): LiveData<AudioModel>
 }

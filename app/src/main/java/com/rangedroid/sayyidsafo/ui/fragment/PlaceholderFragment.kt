@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.ybq.android.spinkit.SpinKitView
 import com.rangedroid.sayyidsafo.R
-import com.rangedroid.sayyidsafo.data.db.model.UnitAudiosModel
+import com.rangedroid.sayyidsafo.data.db.model.AudioModel
 import com.rangedroid.sayyidsafo.ui.adapter.AudiosAdapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +58,7 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
         })
     }
 
-    private fun bindUI(audioModel: List<UnitAudiosModel>){
+    private fun bindUI(audioModel: List<AudioModel>){
         recyclerView.adapter = AudiosAdapter(audioModel)
         recyclerView.visibility = View.VISIBLE
         spinKitView?.visibility = View.GONE
