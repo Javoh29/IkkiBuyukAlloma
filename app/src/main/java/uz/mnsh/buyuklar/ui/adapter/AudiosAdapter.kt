@@ -25,14 +25,25 @@ import uz.mnsh.buyuklar.data.db.model.AudioModel
 import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.listAudios
 import uz.mnsh.buyuklar.utils.AudioPlayerService
 
-class AudiosAdapter(audiosModel: List<AudioModel>) : RecyclerView.Adapter<AudiosAdapter.AudiosViewHolder>(){
+class AudiosAdapter(audiosModel: List<AudioModel>) :
+    RecyclerView.Adapter<AudiosAdapter.AudiosViewHolder>() {
 
     private val listModel: ArrayList<AudioModel> = ArrayList(audiosModel)
-    private var downloadID: Int = 0
     private var isPlay: Int = 1000
-    private var isName: String = ""
+    private var isStart: Boolean = true
+    private var idList: HashMap<Int, Int> = HashMap()
 
-    class AudiosViewHolder(view: View): RecyclerView.ViewHolder(view){
+    init {
+        if (isStart) {
+            listModel.forEachIndexed { index, audioModel ->
+                if (audioModel.getFileName() == binder?.getService()?.currentTitle?.value) {
+                    changeAudio(index)
+                }
+            }
+        }
+    }
+
+    class AudiosViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvTitle: TextView = view.findViewById(R.id.title)
         val tvDuration: TextView = view.findViewById(R.id.duration)
         val tvSize: TextView = view.findViewById(R.id.size)
@@ -62,17 +73,17 @@ class AudiosAdapter(audiosModel: List<AudioModel>) : RecyclerView.Adapter<Audios
         holder.tvSize.text = String.format("%.2f", listModel[position].size / 1000.0) + "Мб"
         holder.tvDuration.text = getFormattedTime(listModel[position].duration)
 
-        if (listAudios.contains(listModel[position].getFileName())){
+        if (listAudios.contains(listModel[position].getFileName())) {
             holder.download.setImageResource(R.drawable.play)
-            holder.download.visibility =  View.VISIBLE
-            holder.progressBar.visibility =  View.GONE
-            if (isPlay == position){
+            holder.download.visibility = View.VISIBLE
+            holder.progressBar.visibility = View.GONE
+            if (isPlay == position) {
                 holder.download.setImageResource(R.drawable.stop)
             }
-        }else{
+        } else {
             holder.download.setImageResource(R.drawable.download)
-            holder.download.visibility =  View.VISIBLE
-            holder.progressBar.visibility =  View.GONE
+            holder.download.visibility = View.VISIBLE
+            holder.progressBar.visibility = View.GONE
         }
 
         holder.constraintLayout.setOnClickListener {
@@ -86,48 +97,53 @@ class AudiosAdapter(audiosModel: List<AudioModel>) : RecyclerView.Adapter<Audios
         }
     }
 
-    private fun startPlay(index: Int, holder: AudiosViewHolder){
-        if (!listAudios.contains(listModel[index].getFileName())){
+    private fun startPlay(index: Int, holder: AudiosViewHolder) {
+        if (!listAudios.contains(listModel[index].getFileName())) {
             startDownload(index, holder)
-        }else{
-            if (isName != listModel[index].name){
-                isName = listModel[index].name
-                listAudios.forEachIndexed { i, it ->
-                    if (it == listModel[index].getFileName()){
-                        binder?.getService()?.handleIntent(i)
-                    }
+        } else {
+            if (binder?.getService()?.currentTitle?.value == listModel[index].getFileName()) {
+                binder?.getService()?.mExoPlayer?.let {
+                    it.playWhenReady = !it.playWhenReady
                 }
-            }else{
-                binder?.getService()?.mExoPlayer.let {
-                    it?.playWhenReady = !it?.playWhenReady!!
-                }
-                notifyDataSetChanged()
+            } else {
+                isPlay = 1000
+                binder?.getService()
+                    ?.handleIntent(listAudios.indexOf(listModel[index].getFileName()))
             }
-            changePlay(index)
+            changeAudio(index)
         }
     }
 
-    private fun changePlay(index: Int){
+    private fun changeAudio(index: Int) {
+        isStart = false
         binder?.getService()?.isPlaying?.observeForever {
             if (it == null) return@observeForever
-            if (it){
-                isPlay = index
-                notifyDataSetChanged()
-            }else{
+            if (it) {
+                if (listModel[index].getFileName() == binder?.getService()?.currentTitle?.value) {
+                    if (isPlay != index) {
+                        isPlay = index
+                    }
+                    notifyDataSetChanged()
+                } else {
+                    isPlay = 1000
+                    notifyDataSetChanged()
+                }
+            } else {
                 isPlay = 1000
                 notifyDataSetChanged()
             }
         }
     }
 
-    private fun startDownload(index: Int, holder: AudiosViewHolder){
-        if (PRDownloader.getStatus(downloadID) == Status.RUNNING){
-            PRDownloader.cancel(downloadID)
+    private fun startDownload(index: Int, holder: AudiosViewHolder) {
+
+        if (idList[index] != null && PRDownloader.getStatus(idList[index]!!) == Status.RUNNING) {
+            PRDownloader.cancel(idList[index]!!)
             notifyItemChanged(index)
-        }else {
+        } else {
             holder.progressBar.visibility = View.VISIBLE
             holder.download.setImageResource(R.drawable.cancel)
-            downloadID = PRDownloader.download(
+            idList[index] = PRDownloader.download(
                 App.BASE_URL + listModel[index].location,
                 App.DIR_PATH,
                 listModel[index].getFileName()
@@ -139,11 +155,16 @@ class AudiosAdapter(audiosModel: List<AudioModel>) : RecyclerView.Adapter<Audios
                     override fun onDownloadComplete() {
                         listAudios.add(listModel[index].getFileName())
                         notifyItemChanged(index)
-                        if (listAudios.size == 1){
+                        idList.remove(index)
+                        if (listAudios.size == 1) {
                             val intent = Intent(holder.mContext, AudioPlayerService::class.java)
                             intent.putExtra(AudioPlayerService.INDEX, 0)
                             intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
-                            holder.mContext.bindService(intent, connection!!, Context.BIND_AUTO_CREATE)
+                            holder.mContext.bindService(
+                                intent,
+                                connection!!,
+                                Context.BIND_AUTO_CREATE
+                            )
                             Util.startForegroundService(holder.mContext, intent)
                         }
                     }

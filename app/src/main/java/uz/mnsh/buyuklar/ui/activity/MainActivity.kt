@@ -227,11 +227,13 @@ class MainActivity : AppCompatActivity(), KodeinAware {
                 startActivity(intent)
             }
             R.id.btn_question -> {
+                playerView.player.playWhenReady = false
                 startActivity(Intent(this@MainActivity, InfoActivity::class.java))
             }
         }
         return true
     }
+
 
     override fun onStop() {
         super.onStop()

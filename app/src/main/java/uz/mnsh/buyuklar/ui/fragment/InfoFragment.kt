@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package uz.mnsh.buyuklar.ui.fragment
 
 import android.media.MediaPlayer
@@ -28,7 +30,6 @@ import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.listAudios
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
-import java.lang.Runnable
 import kotlin.coroutines.CoroutineContext
 
 class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAware {
@@ -54,7 +55,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
 
     private lateinit var viewModel: InfoViewModel
     private lateinit var tvInfo: TextView
-    private lateinit var mediaPlayer: MediaPlayer
+    private var mediaPlayer: MediaPlayer? = null
     private lateinit var seekBar: SeekBar
     private lateinit var btnPlay: AppCompatImageView
     private lateinit var imgInfo: AppCompatImageView
@@ -65,7 +66,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
     private var startTime: Int = 0
     private var endTime: Int = 0
     private var isStop: Boolean = false
-    private var downloadID: Int = 0;
+    private var downloadID: Int = 0
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -86,7 +87,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProviders.of(this, viewModelFactory).get(InfoViewModel::class.java).apply {
-            setIndex(arguments?.getInt(InfoFragment.ARG_SECTION_NUMBER) ?: 1)
+            setIndex(arguments?.getInt(ARG_SECTION_NUMBER) ?: 1)
         }
         viewModel.text.observe(viewLifecycleOwner, Observer {
             loadData(it)
@@ -136,12 +137,12 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
             if (listAudios.contains(model.getFileName())){
                 if (isStop){
                     btnPlay.setImageResource(R.drawable.play)
-                    mediaPlayer.pause()
+                    mediaPlayer?.pause()
                     isStop = false
                 }else{
                     btnPlay.setImageResource(R.drawable.stop)
                     isStop = true
-                    mediaPlayer.start()
+                    mediaPlayer?.start()
                     updateSong()
                 }
             }else{
@@ -179,25 +180,36 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
 
     private fun bindCard(name: String){
         mediaPlayer = MediaPlayer.create(context, Uri.fromFile(File(App.DIR_PATH+name)))
-        startTime = mediaPlayer.currentPosition / 1000
-        endTime = mediaPlayer.duration / 1000
-        Log.d("BAG", mediaPlayer.duration.toString())
+        startTime = mediaPlayer!!.currentPosition / 1000
+        endTime = mediaPlayer!!.duration / 1000
         tvStartTime.text = getFormattedTime(startTime)
         tvEndTime.text = getFormattedTime(endTime)
-        seekBar.progress = mediaPlayer.currentPosition / 100
+        seekBar.progress = mediaPlayer!!.currentPosition / 100
     }
 
     private fun updateSong(){
-        startTime = mediaPlayer.currentPosition / 1000
+        startTime = mediaPlayer!!.currentPosition / 1000
         tvStartTime.text = getFormattedTime(startTime)
-        seekBar.progress = (mediaPlayer.currentPosition) / endTime / 10
-        if ((mediaPlayer.currentPosition / 1000) == endTime){
+        seekBar.progress = (mediaPlayer!!.currentPosition) / endTime / 10
+        if ((mediaPlayer!!.currentPosition / 1000) == endTime){
             btnPlay.setImageResource(R.drawable.play)
         }else{
-            Handler().postDelayed(Runnable { updateSong() }, 1000)
+            Handler().postDelayed({ updateSong() }, 1000)
         }
     }
 
+    override fun setUserVisibleHint(isVisibleToUser: Boolean) {
+        super.setUserVisibleHint(isVisibleToUser)
+        if(!isVisibleToUser){
+            if (mediaPlayer != null){
+                if (mediaPlayer!!.isPlaying){
+                    btnPlay.setImageResource(R.drawable.play)
+                    mediaPlayer?.pause()
+                    isStop = false
+                }
+            }
+        }
+    }
 
     private fun getFormattedTime(seconds: Int): String {
         val minutes = seconds / 60
@@ -206,7 +218,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
 
     override fun onDestroy() {
         super.onDestroy()
-        mediaPlayer.stop()
+        mediaPlayer?.stop()
         job.cancel()
     }
 
