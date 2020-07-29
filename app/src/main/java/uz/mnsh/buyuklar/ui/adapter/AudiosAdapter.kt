@@ -34,10 +34,13 @@ class AudiosAdapter(audiosModel: List<AudioModel>) :
     private var idList: HashMap<Int, Int> = HashMap()
 
     init {
-        if (isStart) {
-            listModel.forEachIndexed { index, audioModel ->
-                if (audioModel.getFileName() == binder?.getService()?.currentTitle?.value) {
-                    changeAudio(index)
+        binder?.getService()?.currentTitle?.observeForever {
+            if (it == null) return@observeForever
+            if (isStart) {
+                listModel.forEachIndexed { index, audioModel ->
+                    if (audioModel.getFileName() == it) {
+                        changeAudio(index)
+                    }
                 }
             }
         }

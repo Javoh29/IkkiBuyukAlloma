@@ -126,13 +126,7 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
             PLAYBACK_NOTIFICATION_ID,
             object : PlayerNotificationManager.MediaDescriptionAdapter {
                 override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                    val intent = Intent(context, MainActivity::class.java)
-                    return PendingIntent.getActivity(
-                        context,
-                        PENDING_INTENT_REQ_CODE,
-                        intent,
-                        PendingIntent.FLAG_UPDATE_CURRENT
-                    )
+                    return null
                 }
 
                 override fun getCurrentContentText(player: Player): String? {

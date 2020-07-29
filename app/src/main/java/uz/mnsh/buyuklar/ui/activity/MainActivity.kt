@@ -234,6 +234,20 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         return true
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (binder?.getService()?.mExoPlayer == null){
+            listAudios.forEachIndexed { i, it ->
+                if (it == unitProvider.getSavedAudio()){
+                    val intent = Intent(this, AudioPlayerService::class.java)
+                    intent.putExtra(AudioPlayerService.INDEX, i)
+                    intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
+                    bindService(intent, connection!!, Context.BIND_AUTO_CREATE)
+                    Util.startForegroundService(this, intent)
+                }
+            }
+        }
+    }
 
     override fun onStop() {
         super.onStop()
