@@ -1,6 +1,6 @@
 package uz.mnsh.buyuklar.utils
 
-import  android.app.Notification
+import android.app.Notification
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
@@ -29,11 +29,11 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.Util
-import java.io.File
 import com.mnsh.sayyidsafo.R
 import uz.mnsh.buyuklar.App
 import uz.mnsh.buyuklar.ui.activity.MainActivity
 import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.listAudios
+import java.io.File
 
 
 class AudioPlayerService : MediaBrowserServiceCompat() {
@@ -126,7 +126,13 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
             PLAYBACK_NOTIFICATION_ID,
             object : PlayerNotificationManager.MediaDescriptionAdapter {
                 override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                    return null
+                    val intent = Intent(context, MainActivity::class.java)
+                    return PendingIntent.getBroadcast(
+                        context,
+                        PENDING_INTENT_REQ_CODE,
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                    )
                 }
 
                 override fun getCurrentContentText(player: Player): String? {
@@ -211,7 +217,7 @@ class AudioPlayerService : MediaBrowserServiceCompat() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        if (intent != null && listAudios.isNotEmpty()){
+        if (intent != null && listAudios.isNotEmpty()) {
             handleIntent(index = intent.getIntExtra(INDEX, 0))
         }
         return Service.START_STICKY
