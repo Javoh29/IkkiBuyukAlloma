@@ -26,7 +26,7 @@ import org.kodein.di.android.x.closestKodein
 import org.kodein.di.generic.instance
 import uz.mnsh.buyuklar.App
 import uz.mnsh.buyuklar.data.db.model.AudioModel
-import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.listAudios
+import uz.mnsh.buyuklar.data.model.SongModel
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -67,6 +67,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
     private var endTime: Int = 0
     private var isStop: Boolean = false
     private var downloadID: Int = 0
+    private var listAudios: ArrayList<String> = ArrayList()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -124,6 +125,12 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
             textInfo.text = model.name
         }catch (e: IOException){
 
+        }
+
+        File(App.DIR_PATH).walkTopDown().forEach { file ->
+            if (file.name.endsWith(".mp3")) {
+                listAudios.add(file.name)
+            }
         }
 
         if (listAudios.contains(model.getFileName())){

@@ -1,7 +1,6 @@
 package uz.mnsh.buyuklar
 
 import android.app.Application
-import android.content.ServiceConnection
 import com.downloader.PRDownloader
 import com.downloader.PRDownloaderConfig
 import org.kodein.di.Kodein
@@ -19,7 +18,6 @@ import uz.mnsh.buyuklar.data.repository.AudiosRepository
 import uz.mnsh.buyuklar.data.repository.AudiosRepositoryImpl
 import uz.mnsh.buyuklar.ui.fragment.InfoViewModelFactory
 import uz.mnsh.buyuklar.ui.fragment.PageViewModelFactory
-import uz.mnsh.buyuklar.utils.AudioPlayerService
 
 class App: Application(), KodeinAware {
 
@@ -42,8 +40,6 @@ class App: Application(), KodeinAware {
         var isDownload: Boolean = false
         const val BASE_URL = "http://5.182.26.44/"
         var DIR_PATH = ""
-        var binder: AudioPlayerService.LocalBinder? = null
-        var connection: ServiceConnection? = null
     }
 
     override fun onCreate() {

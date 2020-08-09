@@ -2,7 +2,6 @@ package uz.mnsh.buyuklar.ui.adapter
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -16,35 +15,23 @@ import com.downloader.Error
 import com.downloader.OnDownloadListener
 import com.downloader.PRDownloader
 import com.downloader.Status
-import com.google.android.exoplayer2.util.Util
-import uz.mnsh.buyuklar.App.Companion.binder
-import uz.mnsh.buyuklar.App.Companion.connection
 import com.mnsh.sayyidsafo.R
 import uz.mnsh.buyuklar.App
 import uz.mnsh.buyuklar.data.db.model.AudioModel
-import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.listAudios
-import uz.mnsh.buyuklar.utils.AudioPlayerService
+import uz.mnsh.buyuklar.data.model.SongModel
+import uz.mnsh.buyuklar.utils.FragmentAction
 
-class AudiosAdapter(audiosModel: List<AudioModel>) :
+class AudiosAdapter(
+    audiosModel: List<AudioModel>,
+    private var fileList: ArrayList<SongModel>,
+    private val fragmentAction: FragmentAction
+) :
     RecyclerView.Adapter<AudiosAdapter.AudiosViewHolder>() {
 
     private val listModel: ArrayList<AudioModel> = ArrayList(audiosModel)
-    private var isPlay: Int = 1000
+    var isPlay: Int = -1
     private var isStart: Boolean = true
     private var idList: HashMap<Int, Int> = HashMap()
-
-    init {
-        binder?.getService()?.currentTitle?.observeForever {
-            if (it == null) return@observeForever
-            if (isStart) {
-                listModel.forEachIndexed { index, audioModel ->
-                    if (audioModel.getFileName() == it) {
-                        changeAudio(index)
-                    }
-                }
-            }
-        }
-    }
 
     class AudiosViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvTitle: TextView = view.findViewById(R.id.title)
@@ -76,70 +63,50 @@ class AudiosAdapter(audiosModel: List<AudioModel>) :
         holder.tvSize.text = String.format("%.2f", listModel[position].size / 1000.0) + "Мб"
         holder.tvDuration.text = getFormattedTime(listModel[position].duration)
 
-        if (listAudios.contains(listModel[position].getFileName())) {
-            holder.download.setImageResource(R.drawable.play)
-            holder.download.visibility = View.VISIBLE
-            holder.progressBar.visibility = View.GONE
-            if (isPlay == position) {
-                holder.download.setImageResource(R.drawable.stop)
+        holder.download.setImageResource(R.drawable.download)
+        holder.download.visibility = View.VISIBLE
+        holder.progressBar.visibility = View.GONE
+        fileList.forEach {
+            if (it.name == listModel[position].name) {
+                holder.download.setImageResource(R.drawable.play)
+                holder.download.visibility = View.VISIBLE
+                holder.progressBar.visibility = View.GONE
+                if (isPlay == position) {
+                    holder.download.setImageResource(R.drawable.stop)
+                }
             }
-        } else {
-            holder.download.setImageResource(R.drawable.download)
-            holder.download.visibility = View.VISIBLE
-            holder.progressBar.visibility = View.GONE
         }
 
         holder.constraintLayout.setOnClickListener {
-            startPlay(position, holder)
+            var isLoad = true
+            fileList.forEach {
+                if (it.name == listModel[position].name){
+                    isLoad = false
+                    fragmentAction.itemPlay(it, position)
+                }
+            }
+            if (isLoad){
+                startDownload(position, holder)
+            }
         }
         holder.download.setOnClickListener {
-            startPlay(position, holder)
+            var isLoad = true
+            fileList.forEach {
+                if (it.name == listModel[position].name){
+                    isLoad = false
+                    fragmentAction.itemPlay(it, position)
+                }
+            }
+            if (isLoad){
+                startDownload(position, holder)
+            }
         }
         holder.progressBar.setOnClickListener {
-            startPlay(position, holder)
-        }
-    }
-
-    private fun startPlay(index: Int, holder: AudiosViewHolder) {
-        if (!listAudios.contains(listModel[index].getFileName())) {
-            startDownload(index, holder)
-        } else {
-            if (binder?.getService()?.currentTitle?.value == listModel[index].getFileName()) {
-                binder?.getService()?.mExoPlayer?.let {
-                    it.playWhenReady = !it.playWhenReady
-                }
-            } else {
-                isPlay = 1000
-                binder?.getService()
-                    ?.handleIntent(listAudios.indexOf(listModel[index].getFileName()))
-            }
-            changeAudio(index)
-        }
-    }
-
-    private fun changeAudio(index: Int) {
-        isStart = false
-        binder?.getService()?.isPlaying?.observeForever {
-            if (it == null) return@observeForever
-            if (it) {
-                if (listModel[index].getFileName() == binder?.getService()?.currentTitle?.value) {
-                    if (isPlay != index) {
-                        isPlay = index
-                    }
-                    notifyDataSetChanged()
-                } else {
-                    isPlay = 1000
-                    notifyDataSetChanged()
-                }
-            } else {
-                isPlay = 1000
-                notifyDataSetChanged()
-            }
+            startDownload(position, holder)
         }
     }
 
     private fun startDownload(index: Int, holder: AudiosViewHolder) {
-
         if (idList[index] != null && PRDownloader.getStatus(idList[index]!!) == Status.RUNNING) {
             PRDownloader.cancel(idList[index]!!)
             notifyItemChanged(index)
@@ -148,7 +115,7 @@ class AudiosAdapter(audiosModel: List<AudioModel>) :
             holder.download.setImageResource(R.drawable.cancel)
             idList[index] = PRDownloader.download(
                 App.BASE_URL + listModel[index].location,
-                App.DIR_PATH,
+                App.DIR_PATH + listModel[index].topic_id + "/",
                 listModel[index].getFileName()
             ).build()
                 .setOnProgressListener {
@@ -156,20 +123,15 @@ class AudiosAdapter(audiosModel: List<AudioModel>) :
                 }
                 .start(object : OnDownloadListener {
                     override fun onDownloadComplete() {
-                        listAudios.add(listModel[index].getFileName())
+                        fileList.add(
+                            SongModel(
+                                name = listModel[index].name,
+                                songPath = "${App.DIR_PATH}${listModel[index].topic_id}/${listModel[index].getFileName()}",
+                                topicID = listModel[index].topic_id.toInt()
+                            )
+                        )
                         notifyItemChanged(index)
                         idList.remove(index)
-                        if (listAudios.size == 1) {
-                            val intent = Intent(holder.mContext, AudioPlayerService::class.java)
-                            intent.putExtra(AudioPlayerService.INDEX, 0)
-                            intent.putExtra(AudioPlayerService.BINDING_SERVICE, true)
-                            holder.mContext.bindService(
-                                intent,
-                                connection!!,
-                                Context.BIND_AUTO_CREATE
-                            )
-                            Util.startForegroundService(holder.mContext, intent)
-                        }
                     }
 
                     override fun onError(error: Error?) {

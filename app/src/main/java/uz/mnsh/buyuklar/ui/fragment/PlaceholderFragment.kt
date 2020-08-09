@@ -1,6 +1,7 @@
 package uz.mnsh.buyuklar.ui.fragment
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -16,11 +17,16 @@ import kotlinx.coroutines.launch
 import org.kodein.di.KodeinAware
 import org.kodein.di.android.x.closestKodein
 import org.kodein.di.generic.instance
+import uz.mnsh.buyuklar.App
 import uz.mnsh.buyuklar.data.db.model.AudioModel
+import uz.mnsh.buyuklar.data.model.SongModel
+import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.mPlayerAdapter
 import uz.mnsh.buyuklar.ui.adapter.AudiosAdapter
+import uz.mnsh.buyuklar.utils.FragmentAction
+import java.io.File
 import kotlin.coroutines.CoroutineContext
 
-class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, KodeinAware {
+class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, KodeinAware, FragmentAction {
 
     override val kodein by closestKodein()
     private val viewModelFactory: PageViewModelFactory by instance<PageViewModelFactory>()
@@ -31,6 +37,8 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
 
     private lateinit var recyclerView: RecyclerView
     private var spinKitView: SpinKitView? = null
+    private var listAudioFile: ArrayList<SongModel> = ArrayList()
+    private var mAdapter: AudiosAdapter? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -66,7 +74,19 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
     }
 
     private fun bindUI(audioModel: List<AudioModel>){
-        recyclerView.adapter = AudiosAdapter(audioModel)
+        listAudioFile.clear()
+        File(App.DIR_PATH + "${audioModel[0].topic_id}/").walkTopDown().forEach { file ->
+            if (file.name.endsWith(".mp3")) {
+                val sm = SongModel(
+                    name = file.name.substring(0, file.name.length - 4),
+                    songPath = file.path,
+                    topicID = audioModel[0].topic_id.toInt()
+                )
+                listAudioFile.add(sm)
+            }
+        }
+        mAdapter = AudiosAdapter(audioModel, listAudioFile, this)
+        recyclerView.adapter = mAdapter
         recyclerView.visibility = View.VISIBLE
         spinKitView?.visibility = View.GONE
     }
@@ -87,5 +107,24 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
     override fun onDestroy() {
         super.onDestroy()
         job.cancel()
+    }
+
+    override fun itemPlay(model: SongModel, i: Int) {
+        if (mPlayerAdapter != null){
+            if (mPlayerAdapter!!.getCurrentSong()?.name == model.name){
+                if (mPlayerAdapter!!.getMediaPlayer()!!.isPlaying){
+                    mAdapter?.isPlay = -1
+                }else{
+                    mAdapter?.isPlay = i
+                }
+                Log.d("BAG", mAdapter?.isPlay.toString())
+                mPlayerAdapter!!.resumeOrPause()
+            }else{
+                mPlayerAdapter!!.setCurrentSong(model, listAudioFile)
+                mPlayerAdapter!!.initMediaPlayer()
+                mAdapter?.isPlay = i
+            }
+            mAdapter?.notifyDataSetChanged()
+        }
     }
 }
