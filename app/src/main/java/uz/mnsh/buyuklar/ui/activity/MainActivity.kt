@@ -21,7 +21,6 @@ import com.google.android.material.tabs.TabLayout
 import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.exoplayer2.ui.BuildConfig
 import com.google.gson.Gson
@@ -32,7 +31,6 @@ import kotlinx.android.synthetic.main.player_layout.*
 import org.kodein.di.KodeinAware
 import org.kodein.di.generic.instance
 import org.kodein.di.android.kodein
-import org.kodein.di.newInstance
 import uz.mnsh.buyuklar.App
 import uz.mnsh.buyuklar.data.model.SongModel
 import uz.mnsh.buyuklar.data.provider.UnitProvider
@@ -41,7 +39,6 @@ import uz.mnsh.buyuklar.playback.MusicService
 import uz.mnsh.buyuklar.playback.PlaybackInfoListener
 import uz.mnsh.buyuklar.playback.PlayerAdapter
 import uz.mnsh.buyuklar.ui.adapter.SectionsPagerAdapter
-import uz.mnsh.buyuklar.ui.fragment.PlaceholderFragment
 import uz.mnsh.buyuklar.utils.AboutUsDialog
 import uz.mnsh.buyuklar.utils.Utils
 import java.io.File
@@ -66,8 +63,7 @@ class MainActivity : AppCompatActivity(), KodeinAware {
     companion object {
         var mPlayerAdapter: PlayerAdapter? = null
         var isSavedSong: Boolean = true
-        var liveSong: MutableLiveData<String> = MutableLiveData()
-        var liveSongPlay: MutableLiveData<Boolean> = MutableLiveData()
+        var isSongPlay: MutableLiveData<Boolean> = MutableLiveData()
     }
 
     private val mConnection = object : ServiceConnection {
@@ -85,7 +81,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
                 mPlayerAdapter!!.setPlaybackInfoListener(mPlaybackListener!!)
             }
             if (mPlayerAdapter != null && mPlayerAdapter?.getCurrentSong()?.name == songModel?.name) {
-                Log.d("BAG", "status")
                 restorePlayerStatus()
             } else {
                 if (songModel != null){
@@ -267,7 +262,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
 
         val selectedSong = mPlayerAdapter!!.getCurrentSong()
 
-        liveSong.postValue(selectedSong?.name)
         tvSongName.text = selectedSong?.name
         audio_title.text = selectedSong?.name
         tvEndTime.text = getFormattedTime(Utils.getDuration(selectedSong!!.songPath)/1000)
@@ -292,7 +286,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
     }
 
     private fun updatePlayingStatus() {
-        var play: Boolean = false
         val drawable = if (mPlayerAdapter!!.getState() != PlaybackInfoListener.State.PAUSED)
             R.drawable.ic_stop
         else
@@ -300,12 +293,11 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         imgPlay!!.post { imgPlay!!.setImageResource(drawable) }
 
         if (mPlayerAdapter!!.getState() != PlaybackInfoListener.State.PAUSED){
-            play = true
             playButton.setImageResource(R.drawable.ic_pause_circled)
         }else{
             playButton.setImageResource(R.drawable.ic_play_circled)
         }
-        liveSongPlay.postValue(play)
+
     }
 
     private fun onSongSelected(song: SongModel) {
@@ -403,13 +395,13 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         }
 
         override fun onStateChanged(@State state: Int) {
-
             updatePlayingStatus()
             if (mPlayerAdapter!!.getState() != State.PAUSED
                 && mPlayerAdapter!!.getState() != State.PAUSED
             ) {
+                isSongPlay.postValue(true)
                 updatePlayingInfo(restore = false, startPlay = true)
-            }
+            }else isSongPlay.postValue(false)
         }
     }
 

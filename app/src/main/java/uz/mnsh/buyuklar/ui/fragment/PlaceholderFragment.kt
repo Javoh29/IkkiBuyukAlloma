@@ -20,10 +20,8 @@ import org.kodein.di.generic.instance
 import uz.mnsh.buyuklar.App
 import uz.mnsh.buyuklar.data.db.model.AudioModel
 import uz.mnsh.buyuklar.data.model.SongModel
-import uz.mnsh.buyuklar.ui.activity.MainActivity
 import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.isSavedSong
-import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.liveSong
-import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.liveSongPlay
+import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.isSongPlay
 import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.mPlayerAdapter
 import uz.mnsh.buyuklar.ui.adapter.AudiosAdapter
 import uz.mnsh.buyuklar.utils.FragmentAction
@@ -42,7 +40,7 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
     private lateinit var recyclerView: RecyclerView
     private var spinKitView: SpinKitView? = null
     private var listAudioFile: ArrayList<SongModel> = ArrayList()
-    var mAdapter: AudiosAdapter? = null
+    private var mAdapter: AudiosAdapter? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -94,6 +92,21 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
         recyclerView.visibility = View.VISIBLE
         spinKitView?.visibility = View.GONE
 
+        isSongPlay.observe(viewLifecycleOwner, Observer {
+            if (it == null) return@Observer
+            var play = true
+            audioModel.forEachIndexed { i, model ->
+                if (model.name == mPlayerAdapter!!.getCurrentSong()?.name){
+                    if (it){
+                        mAdapter?.isPlay = i
+                    }else mAdapter?.isPlay = -1
+                    play = false
+                }
+            }
+            if (play) mAdapter?.isPlay = -1
+            mAdapter?.notifyDataSetChanged()
+        })
+
     }
 
     companion object {
@@ -119,22 +132,14 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
             isSavedSong = false
             if (mPlayerAdapter!!.getCurrentSong()?.name == model.name){
                 if (mPlayerAdapter!!.getMediaPlayer() != null){
-                    if (mPlayerAdapter!!.isPlaying()){
-                        mAdapter?.isPlay = -1
-                    }else{
-                        mAdapter?.isPlay = i
-                    }
                     mPlayerAdapter!!.resumeOrPause()
                 }else{
-                    mAdapter?.isPlay = i
                     mPlayerAdapter!!.initMediaPlayer()
                 }
             }else{
                 mPlayerAdapter!!.setCurrentSong(model, listAudioFile)
                 mPlayerAdapter!!.initMediaPlayer()
-                mAdapter?.isPlay = i
             }
-            mAdapter?.notifyDataSetChanged()
         }
     }
 }
