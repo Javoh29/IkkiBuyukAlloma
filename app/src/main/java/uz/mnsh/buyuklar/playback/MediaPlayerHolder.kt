@@ -10,6 +10,7 @@ import android.media.AudioManager
 import android.media.MediaPlayer
 import android.os.PowerManager
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import uz.mnsh.buyuklar.data.model.SongModel
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -118,6 +119,7 @@ class MediaPlayerHolder(private val mMusicService: MusicService?) :
     override fun onResumeActivity() {
         startUpdatingCallbackWithPosition()
     }
+
 
     override fun onPauseActivity() {
         stopUpdatingCallbackWithPosition()
@@ -314,7 +316,6 @@ class MediaPlayerHolder(private val mMusicService: MusicService?) :
             mSelectedSong = if (currentIndex != 0) mSongs!![0] else mSongs!![mSongs!!.size - 1]
             e.printStackTrace()
         }
-
         initMediaPlayer()
     }
 

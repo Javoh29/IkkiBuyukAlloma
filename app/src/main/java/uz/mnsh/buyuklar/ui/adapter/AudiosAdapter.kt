@@ -19,6 +19,8 @@ import com.mnsh.sayyidsafo.R
 import uz.mnsh.buyuklar.App
 import uz.mnsh.buyuklar.data.db.model.AudioModel
 import uz.mnsh.buyuklar.data.model.SongModel
+import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.liveSong
+import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.liveSongPlay
 import uz.mnsh.buyuklar.utils.FragmentAction
 
 class AudiosAdapter(

@@ -29,7 +29,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvStartTime"
-        android:layout_width="wrap_content"
+        android:layout_width="45dp"
         android:layout_height="wrap_content"
         android:textColor="@color/colorPrimary"
         android:layout_marginStart="10dp"
@@ -41,7 +41,7 @@
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvEndTime"
-        android:layout_width="wrap_content"
+        android:layout_width="45dp"
         android:layout_height="wrap_content"
         android:textColor="@color/colorPrimary"
         android:layout_marginEnd="10dp"
@@ -57,6 +57,7 @@
         android:layout_height="60dp"
         android:layout_marginTop="10dp"
         android:layout_marginStart="5dp"
+        android:src="@drawable/audio_img"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvSongName"/>

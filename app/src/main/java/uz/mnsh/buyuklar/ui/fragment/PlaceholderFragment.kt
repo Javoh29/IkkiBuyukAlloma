@@ -20,6 +20,10 @@ import org.kodein.di.generic.instance
 import uz.mnsh.buyuklar.App
 import uz.mnsh.buyuklar.data.db.model.AudioModel
 import uz.mnsh.buyuklar.data.model.SongModel
+import uz.mnsh.buyuklar.ui.activity.MainActivity
+import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.isSavedSong
+import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.liveSong
+import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.liveSongPlay
 import uz.mnsh.buyuklar.ui.activity.MainActivity.Companion.mPlayerAdapter
 import uz.mnsh.buyuklar.ui.adapter.AudiosAdapter
 import uz.mnsh.buyuklar.utils.FragmentAction
@@ -38,7 +42,7 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
     private lateinit var recyclerView: RecyclerView
     private var spinKitView: SpinKitView? = null
     private var listAudioFile: ArrayList<SongModel> = ArrayList()
-    private var mAdapter: AudiosAdapter? = null
+    var mAdapter: AudiosAdapter? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -89,6 +93,7 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
         recyclerView.adapter = mAdapter
         recyclerView.visibility = View.VISIBLE
         spinKitView?.visibility = View.GONE
+
     }
 
     companion object {
@@ -111,14 +116,19 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
 
     override fun itemPlay(model: SongModel, i: Int) {
         if (mPlayerAdapter != null){
+            isSavedSong = false
             if (mPlayerAdapter!!.getCurrentSong()?.name == model.name){
-                if (mPlayerAdapter!!.getMediaPlayer()!!.isPlaying){
-                    mAdapter?.isPlay = -1
+                if (mPlayerAdapter!!.getMediaPlayer() != null){
+                    if (mPlayerAdapter!!.isPlaying()){
+                        mAdapter?.isPlay = -1
+                    }else{
+                        mAdapter?.isPlay = i
+                    }
+                    mPlayerAdapter!!.resumeOrPause()
                 }else{
                     mAdapter?.isPlay = i
+                    mPlayerAdapter!!.initMediaPlayer()
                 }
-                Log.d("BAG", mAdapter?.isPlay.toString())
-                mPlayerAdapter!!.resumeOrPause()
             }else{
                 mPlayerAdapter!!.setCurrentSong(model, listAudioFile)
                 mPlayerAdapter!!.initMediaPlayer()

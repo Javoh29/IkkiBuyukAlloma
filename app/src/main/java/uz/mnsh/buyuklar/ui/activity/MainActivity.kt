@@ -21,6 +21,8 @@ import com.google.android.material.tabs.TabLayout
 import androidx.viewpager.widget.ViewPager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.google.android.exoplayer2.ui.BuildConfig
 import com.google.gson.Gson
 import com.mnsh.sayyidsafo.R
@@ -30,6 +32,7 @@ import kotlinx.android.synthetic.main.player_layout.*
 import org.kodein.di.KodeinAware
 import org.kodein.di.generic.instance
 import org.kodein.di.android.kodein
+import org.kodein.di.newInstance
 import uz.mnsh.buyuklar.App
 import uz.mnsh.buyuklar.data.model.SongModel
 import uz.mnsh.buyuklar.data.provider.UnitProvider
@@ -38,6 +41,7 @@ import uz.mnsh.buyuklar.playback.MusicService
 import uz.mnsh.buyuklar.playback.PlaybackInfoListener
 import uz.mnsh.buyuklar.playback.PlayerAdapter
 import uz.mnsh.buyuklar.ui.adapter.SectionsPagerAdapter
+import uz.mnsh.buyuklar.ui.fragment.PlaceholderFragment
 import uz.mnsh.buyuklar.utils.AboutUsDialog
 import uz.mnsh.buyuklar.utils.Utils
 import java.io.File
@@ -58,10 +62,12 @@ class MainActivity : AppCompatActivity(), KodeinAware {
     private var listAudiosFile: ArrayList<SongModel> = ArrayList()
     private var songModel: SongModel? = null
     private var mIsBound: Boolean? = null
-    private var isSavedSong: Boolean = true
 
     companion object {
         var mPlayerAdapter: PlayerAdapter? = null
+        var isSavedSong: Boolean = true
+        var liveSong: MutableLiveData<String> = MutableLiveData()
+        var liveSongPlay: MutableLiveData<Boolean> = MutableLiveData()
     }
 
     private val mConnection = object : ServiceConnection {
@@ -145,7 +151,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             }
             tvSongName.text = songModel!!.name
             tvEndTime.text = getFormattedTime(Utils.getDuration(songModel!!.songPath)/1000)
-            songImg.setImageBitmap(Utils.songArt(songModel!!.songPath, this))
         }
 
         imgNext.setOnClickListener {
@@ -170,14 +175,30 @@ class MainActivity : AppCompatActivity(), KodeinAware {
 
 
         forwardButton.setOnClickListener {
-
+            if (mPlayerAdapter!!.getMediaPlayer()!!.currentPosition.plus(30000) < mPlayerAdapter!!.getMediaPlayer()!!.duration) {
+                mPlayerAdapter!!.seekTo(mPlayerAdapter!!.getMediaPlayer()!!.currentPosition.plus(30000))
+            }else{
+                mPlayerAdapter!!.skip(true)
+            }
         }
 
         replayButton.setOnClickListener {
-
+            if (mPlayerAdapter!!.getMediaPlayer()!!.currentPosition.minus(30000) > 0) {
+                mPlayerAdapter!!.seekTo(
+                    mPlayerAdapter!!.getMediaPlayer()!!.currentPosition.minus(
+                        30000
+                    )
+                )
+            } else {
+                mPlayerAdapter!!.seekTo(0)
+            }
         }
 
         playButton.setOnClickListener {
+            if (isSavedSong){
+                mPlayerAdapter!!.initMediaPlayer()
+                isSavedSong = false
+            }
             resumeOrPause()
         }
 
@@ -246,10 +267,11 @@ class MainActivity : AppCompatActivity(), KodeinAware {
 
         val selectedSong = mPlayerAdapter!!.getCurrentSong()
 
+        liveSong.postValue(selectedSong?.name)
         tvSongName.text = selectedSong?.name
+        audio_title.text = selectedSong?.name
         tvEndTime.text = getFormattedTime(Utils.getDuration(selectedSong!!.songPath)/1000)
         seekBar?.max = Utils.getDuration(selectedSong.songPath).toInt()
-        songImg?.setImageBitmap(Utils.songArt(selectedSong.songPath, this))
 
         if (restore) {
             seekBar!!.progress = mPlayerAdapter!!.getPlayerPosition()
@@ -270,11 +292,20 @@ class MainActivity : AppCompatActivity(), KodeinAware {
     }
 
     private fun updatePlayingStatus() {
+        var play: Boolean = false
         val drawable = if (mPlayerAdapter!!.getState() != PlaybackInfoListener.State.PAUSED)
             R.drawable.ic_stop
         else
             R.drawable.ic_play
         imgPlay!!.post { imgPlay!!.setImageResource(drawable) }
+
+        if (mPlayerAdapter!!.getState() != PlaybackInfoListener.State.PAUSED){
+            play = true
+            playButton.setImageResource(R.drawable.ic_pause_circled)
+        }else{
+            playButton.setImageResource(R.drawable.ic_play_circled)
+        }
+        liveSongPlay.postValue(play)
     }
 
     private fun onSongSelected(song: SongModel) {
