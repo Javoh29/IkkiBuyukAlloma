@@ -358,6 +358,9 @@ class MainActivity : AppCompatActivity(), KodeinAware {
                 startActivity(intent)
             }
             R.id.btn_question -> {
+                if (mPlayerAdapter!!.isPlaying()){
+                    resumeOrPause()
+                }
                 startActivity(Intent(this@MainActivity, InfoActivity::class.java))
             }
         }

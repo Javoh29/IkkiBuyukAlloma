@@ -162,7 +162,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
                     btnPlay.setImageResource(R.drawable.cancel)
                     downloadID = PRDownloader.download(
                         App.BASE_URL + model.location,
-                        App.DIR_PATH,
+                        App.DIR_PATH + model.topic_id + "/",
                         model.getFileName()
                     ).build()
                         .setOnProgressListener {
