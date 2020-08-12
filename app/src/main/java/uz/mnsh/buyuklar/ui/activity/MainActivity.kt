@@ -155,11 +155,13 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         }
 
         imgPlay.setOnClickListener {
-            if (isSavedSong){
+            if (isSavedSong && songModel != null){
                 mPlayerAdapter!!.initMediaPlayer()
                 isSavedSong = false
             }
-            resumeOrPause()
+            if (mPlayerAdapter?.isMediaPlayer() != null){
+                resumeOrPause()
+            }
         }
 
         imgPrevious.setOnClickListener {
@@ -190,11 +192,13 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         }
 
         playButton.setOnClickListener {
-            if (isSavedSong){
+            if (isSavedSong && songModel != null){
                 mPlayerAdapter!!.initMediaPlayer()
                 isSavedSong = false
             }
-            resumeOrPause()
+            if (mPlayerAdapter?.isMediaPlayer() != null){
+                resumeOrPause()
+            }
         }
 
     }
@@ -385,8 +389,8 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         doBindService()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onStop() {
+        super.onStop()
         unitProvider.setSavedAudio(Gson().toJson(mPlayerAdapter!!.getCurrentSong()))
     }
 
