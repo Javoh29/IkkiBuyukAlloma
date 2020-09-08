@@ -12,7 +12,7 @@ interface AudiosDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun upsertAudios(audioModel: AudioModel)
 
-    @Query("select * from audios_table where topic_id == :id")
+    @Query("select * from audios_table where rn == :id")
     fun getAudios(id :Int): LiveData<List<AudioModel>>
 
     @Query("DELETE FROM audios_table")

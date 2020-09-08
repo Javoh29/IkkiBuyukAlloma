@@ -60,8 +60,8 @@ class AudiosAdapter(
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: AudiosViewHolder, position: Int) {
         holder.tvTitle.text = listModel[position].name
-        holder.tvSize.text = String.format("%.2f", listModel[position].size / 1000.0) + "Мб"
-        holder.tvDuration.text = getFormattedTime(listModel[position].duration)
+        holder.tvSize.text = String.format("%.2f", listModel[position].size.toInt() / 1024.0) + "Мб"
+        holder.tvDuration.text = getFormattedTime(listModel[position].duration.toLong())
 
         holder.download.setImageResource(R.drawable.download)
         holder.download.visibility = View.VISIBLE
@@ -115,7 +115,7 @@ class AudiosAdapter(
             holder.download.setImageResource(R.drawable.cancel)
             idList[index] = PRDownloader.download(
                 App.BASE_URL + listModel[index].location,
-                App.DIR_PATH + listModel[index].topic_id + "/",
+                App.DIR_PATH + listModel[index].rn + "/",
                 listModel[index].getFileName()
             ).build()
                 .setOnProgressListener {
@@ -126,8 +126,8 @@ class AudiosAdapter(
                         fileList.add(
                             SongModel(
                                 name = listModel[index].name,
-                                songPath = "${App.DIR_PATH}${listModel[index].topic_id}/${listModel[index].getFileName()}",
-                                topicID = listModel[index].topic_id.toInt()
+                                songPath = "${App.DIR_PATH}${listModel[index].rn}/${listModel[index].getFileName()}",
+                                topicID = listModel[index].rn.toInt()
                             )
                         )
                         notifyItemChanged(index)

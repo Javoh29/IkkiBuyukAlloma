@@ -1,11 +1,9 @@
 package uz.mnsh.buyuklar.ui.fragment
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.ybq.android.spinkit.SpinKitView
@@ -53,7 +51,7 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        pageViewModel = ViewModelProviders.of(this, viewModelFactory).get(PageViewModel::class.java).apply {
+        pageViewModel = viewModelFactory.create(PageViewModel::class.java).apply {
             setIndex(arguments?.getInt(ARG_SECTION_NUMBER) ?: 1)
         }
         pageViewModel.text.observe(viewLifecycleOwner, Observer {
@@ -63,26 +61,26 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
 
     private fun loadData(index: Int) = launch {
         if (index == 1){
-            pageViewModel.getAudios(8).value.await().observe(viewLifecycleOwner, Observer {
-                if (it == null) return@Observer
-                if (it.isNotEmpty()) bindUI(it)
-            })
-        }else{
             pageViewModel.getAudios(9).value.await().observe(viewLifecycleOwner, Observer {
                 if (it == null) return@Observer
-                if (it.isNotEmpty()) bindUI(it)
+                bindUI(it)
+            })
+        }else{
+            pageViewModel.getAudios(10).value.await().observe(viewLifecycleOwner, Observer {
+                if (it == null) return@Observer
+                bindUI(it)
             })
         }
     }
 
     private fun bindUI(audioModel: List<AudioModel>){
         listAudioFile.clear()
-        File(App.DIR_PATH + "${audioModel[0].topic_id}/").walkTopDown().forEach { file ->
+        File(App.DIR_PATH + "${audioModel[0].rn}/").walkTopDown().forEach { file ->
             if (file.name.endsWith(".mp3")) {
                 val sm = SongModel(
                     name = file.name.substring(0, file.name.length - 4),
                     songPath = file.path,
-                    topicID = audioModel[0].topic_id.toInt()
+                    topicID = audioModel[0].rn.toInt()
                 )
                 listAudioFile.add(sm)
             }

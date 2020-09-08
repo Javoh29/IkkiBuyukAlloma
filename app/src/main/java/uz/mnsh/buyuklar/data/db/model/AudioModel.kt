@@ -1,27 +1,27 @@
 package uz.mnsh.buyuklar.data.db.model
 
+
+import com.google.gson.annotations.SerializedName
 import androidx.annotation.Keep
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.google.gson.annotations.SerializedName
 
 @Keep
 @Entity(tableName = "audios_table")
 data class AudioModel(
-    @PrimaryKey(autoGenerate = true)
-    var idTable: Int = 0,
+    @PrimaryKey(autoGenerate = false)
     @SerializedName("id")
     val id: Int,
-    @SerializedName("name")
-    val name: String,
+    @SerializedName("duration")
+    val duration: String,
     @SerializedName("location")
     val location: String,
-    @SerializedName("topic_id")
-    val topic_id: String,
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("rn")
+    val rn: Int,
     @SerializedName("size")
-    val size: Long,
-    @SerializedName("duration")
-    val duration: Long
+    val size: String
 ){
     fun getFileName(): String {
         return "$name.mp3"

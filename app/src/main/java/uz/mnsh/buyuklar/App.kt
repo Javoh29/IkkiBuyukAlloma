@@ -28,17 +28,15 @@ class App: Application(), KodeinAware {
             bind() from singleton { AudiosDatabase(instance()) }
             bind() from singleton { instance<AudiosDatabase>().audiosDao() }
             bind<UnitProvider>() with singleton { UnitProviderImpl(instance()) }
-            bind<ConnectivityInterceptor>() with singleton { ConnectivityInterceptorImpl(instance()) }
-            bind() from singleton { ApiService(instance()) }
-            bind<AudioNetworkDataSource>() with singleton { AudioNetworkDataSourceImpl(instance()) }
-            bind<AudiosRepository>() with singleton { AudiosRepositoryImpl(instance(), instance(), instance()) }
+            bind() from singleton { ApiService() }
+            bind<AudiosRepository>() with singleton { AudiosRepositoryImpl(instance(), instance()) }
             bind() from provider { PageViewModelFactory(instance()) }
             bind() from provider { InfoViewModelFactory(instance()) }
         }
 
     companion object {
         var isDownload: Boolean = false
-        const val BASE_URL = "http://5.182.26.44/"
+        const val BASE_URL = "http://5.182.26.44:8080/api/"
         var DIR_PATH = ""
     }
 
