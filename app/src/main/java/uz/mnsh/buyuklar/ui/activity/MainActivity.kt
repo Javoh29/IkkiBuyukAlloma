@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.os.Handler
 import android.os.IBinder
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -27,16 +28,12 @@ import com.mnsh.sayyidsafo.R
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.auto_mode.*
 import kotlinx.android.synthetic.main.player_layout.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import org.kodein.di.KodeinAware
 import org.kodein.di.generic.instance
 import org.kodein.di.android.kodein
 import uz.mnsh.buyuklar.App
 import uz.mnsh.buyuklar.data.model.SongModel
 import uz.mnsh.buyuklar.data.provider.UnitProvider
-import uz.mnsh.buyuklar.data.repository.AudiosRepository
 import uz.mnsh.buyuklar.playback.MusicNotificationManager
 import uz.mnsh.buyuklar.playback.MusicService
 import uz.mnsh.buyuklar.playback.PlaybackInfoListener
@@ -51,7 +48,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
 
     override val kodein by kodein()
     private val unitProvider: UnitProvider by instance<UnitProvider>()
-    private val audiosRepository: AudiosRepository by instance<AudiosRepository>()
     private lateinit var audioTitle: TextView
     private lateinit var playButton: ImageView
     private lateinit var replayButton: ImageView
@@ -87,7 +83,7 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             if (mPlayerAdapter != null && mPlayerAdapter?.getCurrentSong()?.name == songModel?.name) {
                 restorePlayerStatus()
             } else {
-                if (songModel != null) {
+                if (songModel != null){
                     onSongSelected(songModel!!)
                 }
             }
@@ -100,7 +96,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         setTheme(R.style.AppTheme)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        loadData()
         supportActionBar?.setDisplayShowTitleEnabled(false)
         val sectionsPagerAdapter =
             SectionsPagerAdapter(
@@ -119,14 +114,6 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         requestPermissions()
         bindUI()
         initializeSeekBar()
-    }
-
-    private fun loadData() {
-        GlobalScope.launch(Dispatchers.IO) {
-            if (unitProvider.isOnline()){
-                audiosRepository.fetchingAudios()
-            }
-        }
     }
 
     private fun requestPermissions() {
@@ -158,7 +145,7 @@ class MainActivity : AppCompatActivity(), KodeinAware {
                 }
             }
             tvSongName.text = songModel!!.name
-            tvEndTime.text = getFormattedTime(Utils.getDuration(songModel!!.songPath) / 1000)
+            tvEndTime.text = getFormattedTime(Utils.getDuration(songModel!!.songPath)/1000)
         }
 
         imgNext.setOnClickListener {
@@ -168,11 +155,13 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         }
 
         imgPlay.setOnClickListener {
-            if (isSavedSong) {
+            if (isSavedSong && songModel != null){
                 mPlayerAdapter!!.initMediaPlayer()
                 isSavedSong = false
             }
-            resumeOrPause()
+            if (mPlayerAdapter?.isMediaPlayer() != null){
+                resumeOrPause()
+            }
         }
 
         imgPrevious.setOnClickListener {
@@ -184,12 +173,8 @@ class MainActivity : AppCompatActivity(), KodeinAware {
 
         forwardButton.setOnClickListener {
             if (mPlayerAdapter!!.getMediaPlayer()!!.currentPosition.plus(30000) < mPlayerAdapter!!.getMediaPlayer()!!.duration) {
-                mPlayerAdapter!!.seekTo(
-                    mPlayerAdapter!!.getMediaPlayer()!!.currentPosition.plus(
-                        30000
-                    )
-                )
-            } else {
+                mPlayerAdapter!!.seekTo(mPlayerAdapter!!.getMediaPlayer()!!.currentPosition.plus(30000))
+            }else{
                 mPlayerAdapter!!.skip(true)
             }
         }
@@ -207,11 +192,13 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         }
 
         playButton.setOnClickListener {
-            if (isSavedSong) {
+            if (isSavedSong && songModel != null){
                 mPlayerAdapter!!.initMediaPlayer()
                 isSavedSong = false
             }
-            resumeOrPause()
+            if (mPlayerAdapter?.isMediaPlayer() != null){
+                resumeOrPause()
+            }
         }
 
     }
@@ -281,7 +268,7 @@ class MainActivity : AppCompatActivity(), KodeinAware {
 
         tvSongName.text = selectedSong?.name
         audio_title.text = selectedSong?.name
-        tvEndTime.text = getFormattedTime(Utils.getDuration(selectedSong!!.songPath) / 1000)
+        tvEndTime.text = getFormattedTime(Utils.getDuration(selectedSong!!.songPath)/1000)
         seekBar?.max = Utils.getDuration(selectedSong.songPath).toInt()
 
         if (restore) {
@@ -309,9 +296,9 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             R.drawable.ic_play
         imgPlay!!.post { imgPlay!!.setImageResource(drawable) }
 
-        if (mPlayerAdapter!!.getState() != PlaybackInfoListener.State.PAUSED) {
+        if (mPlayerAdapter!!.getState() != PlaybackInfoListener.State.PAUSED){
             playButton.setImageResource(R.drawable.ic_pause_circled)
-        } else {
+        }else{
             playButton.setImageResource(R.drawable.ic_play_circled)
         }
 
@@ -375,6 +362,9 @@ class MainActivity : AppCompatActivity(), KodeinAware {
                 startActivity(intent)
             }
             R.id.btn_question -> {
+                if (mPlayerAdapter!!.isPlaying()){
+                    resumeOrPause()
+                }
                 startActivity(Intent(this@MainActivity, InfoActivity::class.java))
             }
         }
@@ -399,8 +389,8 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         doBindService()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onStop() {
+        super.onStop()
         unitProvider.setSavedAudio(Gson().toJson(mPlayerAdapter!!.getCurrentSong()))
     }
 
@@ -418,7 +408,7 @@ class MainActivity : AppCompatActivity(), KodeinAware {
             ) {
                 isSongPlay.postValue(true)
                 updatePlayingInfo(restore = false, startPlay = true)
-            } else isSongPlay.postValue(false)
+            }else isSongPlay.postValue(false)
         }
     }
 

@@ -8,7 +8,7 @@ import uz.mnsh.buyuklar.data.db.model.AudioModel
 
 @Database(
     entities = [AudioModel::class],
-    version = 1
+    version = 2
 )
 abstract class AudiosDatabase: RoomDatabase() {
     abstract fun audiosDao(): AudiosDao
@@ -23,7 +23,7 @@ abstract class AudiosDatabase: RoomDatabase() {
 
         private fun buildDatabase(context: Context) =
             Room.databaseBuilder(context.applicationContext,
-                AudiosDatabase::class.java, "audios.db")
+                AudiosDatabase::class.java, "audios.db").fallbackToDestructiveMigration()
                 .build()
     }
 }
