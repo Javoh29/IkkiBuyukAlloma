@@ -25,9 +25,9 @@ class AudiosRepositoryImpl(
     }
 
     override suspend fun fetchingAudios() {
-        val response = apiService.getAudios(9)
+        val response = apiService.getAudios(10)
         if (response.isSuccessful && response.body()!!.data.isNotEmpty()){
-            val response2 = apiService.getAudios(10)
+            val response2 = apiService.getAudios(11)
             if (response2.isSuccessful && response2.body()!!.data.isNotEmpty()){
                 audiosDao.deleteAudios()
                 response.body()!!.data.forEach {

@@ -61,12 +61,12 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
 
     private fun loadData(index: Int) = launch {
         if (index == 1){
-            pageViewModel.getAudios(9).value.await().observe(viewLifecycleOwner, Observer {
+            pageViewModel.getAudios(10).value.await().observe(viewLifecycleOwner, Observer {
                 if (it == null) return@Observer
                 bindUI(it)
             })
         }else{
-            pageViewModel.getAudios(10).value.await().observe(viewLifecycleOwner, Observer {
+            pageViewModel.getAudios(11).value.await().observe(viewLifecycleOwner, Observer {
                 if (it == null) return@Observer
                 bindUI(it)
             })

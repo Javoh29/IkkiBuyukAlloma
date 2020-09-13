@@ -96,12 +96,12 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
 
     private fun loadData(index: Int) = launch{
         if (index == 1){
-            viewModel.getFirst("9", 1).value.await().observe(viewLifecycleOwner, Observer {
+            viewModel.getFirst("10", 1).value.await().observe(viewLifecycleOwner, Observer {
                 if (it == null) return@Observer
                 bindUI(it, index)
             })
         }else{
-            viewModel.getFirst("10", 1).value.await().observe(viewLifecycleOwner, Observer {
+            viewModel.getFirst("11", 1).value.await().observe(viewLifecycleOwner, Observer {
                 if (it == null) return@Observer
                 bindUI(it, index)
             })
