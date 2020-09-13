@@ -28,12 +28,16 @@ import com.mnsh.sayyidsafo.R
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.auto_mode.*
 import kotlinx.android.synthetic.main.player_layout.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import org.kodein.di.KodeinAware
 import org.kodein.di.generic.instance
 import org.kodein.di.android.kodein
 import uz.mnsh.buyuklar.App
 import uz.mnsh.buyuklar.data.model.SongModel
 import uz.mnsh.buyuklar.data.provider.UnitProvider
+import uz.mnsh.buyuklar.data.repository.AudiosRepository
 import uz.mnsh.buyuklar.playback.MusicNotificationManager
 import uz.mnsh.buyuklar.playback.MusicService
 import uz.mnsh.buyuklar.playback.PlaybackInfoListener
@@ -47,7 +51,8 @@ import java.io.File
 class MainActivity : AppCompatActivity(), KodeinAware {
 
     override val kodein by kodein()
-    private val unitProvider: UnitProvider by instance<UnitProvider>()
+    private val unitProvider: UnitProvider by instance()
+    private val audiosRepository: AudiosRepository by instance()
     private lateinit var audioTitle: TextView
     private lateinit var playButton: ImageView
     private lateinit var replayButton: ImageView
@@ -114,6 +119,11 @@ class MainActivity : AppCompatActivity(), KodeinAware {
         requestPermissions()
         bindUI()
         initializeSeekBar()
+        GlobalScope.launch(Dispatchers.IO) {
+            if (unitProvider.isOnline()) {
+                audiosRepository.fetchingAudios()
+            }
+        }
     }
 
     private fun requestPermissions() {

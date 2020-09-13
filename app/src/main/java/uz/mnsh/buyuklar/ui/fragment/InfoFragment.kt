@@ -34,7 +34,7 @@ import kotlin.coroutines.CoroutineContext
 class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAware {
 
     companion object {
-        private const val ARG_SECTION_NUMBER = "section_number"
+        private const val ARG_SECTION_NUMBER = "section_index"
 
         @JvmStatic
         fun newInstance(sectionNumber: Int): InfoFragment {
@@ -47,7 +47,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
     }
 
     override val kodein by closestKodein()
-    private val viewModelFactory: InfoViewModelFactory by instance<InfoViewModelFactory>()
+    private val viewModelFactory: InfoViewModelFactory by instance()
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
@@ -96,12 +96,12 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
 
     private fun loadData(index: Int) = launch{
         if (index == 1){
-            viewModel.getFirst(733).value.await().observe(viewLifecycleOwner, Observer {
+            viewModel.getFirst("9", 1).value.await().observe(viewLifecycleOwner, Observer {
                 if (it == null) return@Observer
                 bindUI(it, index)
             })
         }else{
-            viewModel.getFirst(850).value.await().observe(viewLifecycleOwner, Observer {
+            viewModel.getFirst("10", 1).value.await().observe(viewLifecycleOwner, Observer {
                 if (it == null) return@Observer
                 bindUI(it, index)
             })
@@ -126,7 +126,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
 
         }
 
-        File(App.DIR_PATH).walkTopDown().forEach { file ->
+        File(App.DIR_PATH + "${model.topicID}/").walkTopDown().forEach { file ->
             if (file.name.endsWith(".mp3")) {
                 listAudios.add(file.name)
             }
@@ -134,7 +134,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
 
         if (listAudios.contains(model.getFileName())){
             btnPlay.setImageResource(R.drawable.play)
-            bindCard(model.getFileName())
+            bindCard(model.getFileName(), model.topicID)
         }else{
             btnPlay.setImageResource(R.drawable.download)
         }
@@ -160,8 +160,8 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
                     progressBar.visibility = View.VISIBLE
                     btnPlay.setImageResource(R.drawable.cancel)
                     downloadID = PRDownloader.download(
-                        App.BASE_URL + model.location,
-                        App.DIR_PATH + model.topic_id + "/",
+                        "http://5.182.26.44:8080/storage/" + model.location,
+                        App.DIR_PATH + model.rn + "/",
                         model.getFileName()
                     ).build()
                         .setOnProgressListener {
@@ -172,7 +172,7 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
                                 progressBar.visibility = View.GONE
                                 btnPlay.setImageResource(R.drawable.play)
                                 listAudios.add(model.getFileName())
-                                bindCard(model.getFileName())
+                                bindCard(model.getFileName(), model.topicID)
                             }
 
                             override fun onError(error: Error?) {
@@ -184,8 +184,8 @@ class InfoFragment : Fragment(R.layout.info_fragment), CoroutineScope, KodeinAwa
         }
     }
 
-    private fun bindCard(name: String){
-        mediaPlayer = MediaPlayer.create(context, Uri.fromFile(File(App.DIR_PATH+name)))
+    private fun bindCard(name: String, topID: String){
+        mediaPlayer = MediaPlayer.create(context, Uri.fromFile(File(App.DIR_PATH + "$topID/$name")))
         startTime = mediaPlayer!!.currentPosition / 1000
         endTime = mediaPlayer!!.duration / 1000
         tvStartTime.text = getFormattedTime(startTime)

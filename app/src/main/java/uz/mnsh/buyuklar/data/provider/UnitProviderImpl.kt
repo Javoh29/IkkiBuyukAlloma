@@ -10,7 +10,7 @@ class UnitProviderImpl(private val context: Context) : PreferenceProvider(contex
     private val audioSaved = "AUDIO_SAVED"
     private val audioTime = "AUDIO_TIME"
 
-    override fun isOnline(): Boolean {
+    override suspend fun isOnline(): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE)
                 as ConnectivityManager
         val networkInfo = connectivityManager.activeNetworkInfo

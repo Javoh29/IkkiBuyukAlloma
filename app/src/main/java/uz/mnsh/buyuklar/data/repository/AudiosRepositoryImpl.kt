@@ -18,9 +18,9 @@ class AudiosRepositoryImpl(
         }
     }
 
-    override suspend fun getFirst(index: Int): LiveData<AudioModel> {
+    override suspend fun getFirst(topID: String, index: Int): LiveData<AudioModel> {
         return withContext(Dispatchers.IO){
-            return@withContext audiosDao.getFirst(index)
+            return@withContext audiosDao.getFirst(topID, index)
         }
     }
 

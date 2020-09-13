@@ -4,5 +4,5 @@ import uz.mnsh.buyuklar.data.model.SongModel
 
 interface FragmentAction {
 
-    fun itemPlay(model: SongModel, i: Int)
+    fun itemPlay(model: SongModel)
 }

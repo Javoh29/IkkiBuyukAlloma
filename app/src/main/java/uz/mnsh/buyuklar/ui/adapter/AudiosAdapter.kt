@@ -82,7 +82,7 @@ class AudiosAdapter(
             fileList.forEach {
                 if (it.name == listModel[position].name){
                     isLoad = false
-                    fragmentAction.itemPlay(it, position)
+                    fragmentAction.itemPlay(it)
                 }
             }
             if (isLoad){
@@ -94,7 +94,7 @@ class AudiosAdapter(
             fileList.forEach {
                 if (it.name == listModel[position].name){
                     isLoad = false
-                    fragmentAction.itemPlay(it, position)
+                    fragmentAction.itemPlay(it)
                 }
             }
             if (isLoad){
@@ -114,8 +114,8 @@ class AudiosAdapter(
             holder.progressBar.visibility = View.VISIBLE
             holder.download.setImageResource(R.drawable.cancel)
             idList[index] = PRDownloader.download(
-                App.BASE_URL + listModel[index].location,
-                App.DIR_PATH + listModel[index].rn + "/",
+                "http://5.182.26.44:8080/storage/" + listModel[index].location,
+                App.DIR_PATH + listModel[index].topicID + "/",
                 listModel[index].getFileName()
             ).build()
                 .setOnProgressListener {

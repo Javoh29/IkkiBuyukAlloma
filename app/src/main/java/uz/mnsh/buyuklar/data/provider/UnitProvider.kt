@@ -1,7 +1,7 @@
 package uz.mnsh.buyuklar.data.provider
 
 interface UnitProvider {
-    fun isOnline(): Boolean
+    suspend fun isOnline(): Boolean
 
     fun getSavedAudio(): String
 

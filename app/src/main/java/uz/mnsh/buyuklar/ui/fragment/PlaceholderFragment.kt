@@ -29,7 +29,7 @@ import kotlin.coroutines.CoroutineContext
 class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, KodeinAware, FragmentAction {
 
     override val kodein by closestKodein()
-    private val viewModelFactory: PageViewModelFactory by instance<PageViewModelFactory>()
+    private val viewModelFactory: PageViewModelFactory by instance()
     private lateinit var pageViewModel: PageViewModel
     private lateinit var job: Job
     override val coroutineContext: CoroutineContext
@@ -74,37 +74,38 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
     }
 
     private fun bindUI(audioModel: List<AudioModel>){
-        listAudioFile.clear()
-        File(App.DIR_PATH + "${audioModel[0].rn}/").walkTopDown().forEach { file ->
-            if (file.name.endsWith(".mp3")) {
-                val sm = SongModel(
-                    name = file.name.substring(0, file.name.length - 4),
-                    songPath = file.path,
-                    topicID = audioModel[0].rn.toInt()
-                )
-                listAudioFile.add(sm)
-            }
-        }
-        mAdapter = AudiosAdapter(audioModel, listAudioFile, this)
-        recyclerView.adapter = mAdapter
-        recyclerView.visibility = View.VISIBLE
-        spinKitView?.visibility = View.GONE
-
-        isSongPlay.observe(viewLifecycleOwner, Observer {
-            if (it == null) return@Observer
-            var play = true
-            audioModel.forEachIndexed { i, model ->
-                if (model.name == mPlayerAdapter!!.getCurrentSong()?.name){
-                    if (it){
-                        mAdapter?.isPlay = i
-                    }else mAdapter?.isPlay = -1
-                    play = false
+        if (audioModel.isNotEmpty()) {
+            listAudioFile.clear()
+            File(App.DIR_PATH + "${audioModel[0].topicID}/").walkTopDown().forEach { file ->
+                if (file.name.endsWith(".mp3")) {
+                    val sm = SongModel(
+                        name = file.name.substring(0, file.name.length - 4),
+                        songPath = file.path,
+                        topicID = audioModel[0].rn
+                    )
+                    listAudioFile.add(sm)
                 }
             }
-            if (play) mAdapter?.isPlay = -1
-            mAdapter?.notifyDataSetChanged()
-        })
+            mAdapter = AudiosAdapter(audioModel, listAudioFile, this)
+            recyclerView.adapter = mAdapter
+            recyclerView.visibility = View.VISIBLE
+            spinKitView?.visibility = View.GONE
 
+            isSongPlay.observe(viewLifecycleOwner, Observer {
+                if (it == null) return@Observer
+                var play = true
+                audioModel.forEachIndexed { i, model ->
+                    if (model.name == mPlayerAdapter!!.getCurrentSong()?.name){
+                        if (it){
+                            mAdapter?.isPlay = i
+                        }else mAdapter?.isPlay = -1
+                        play = false
+                    }
+                }
+                if (play) mAdapter?.isPlay = -1
+                mAdapter?.notifyDataSetChanged()
+            })
+        }
     }
 
     companion object {
@@ -125,7 +126,7 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
         job.cancel()
     }
 
-    override fun itemPlay(model: SongModel, i: Int) {
+    override fun itemPlay(model: SongModel) {
         if (mPlayerAdapter != null){
             isSavedSong = false
             if (mPlayerAdapter!!.getCurrentSong()?.name == model.name){

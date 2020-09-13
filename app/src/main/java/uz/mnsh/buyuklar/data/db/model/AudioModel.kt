@@ -20,6 +20,8 @@ data class AudioModel(
     val name: String,
     @SerializedName("rn")
     val rn: Int,
+    @SerializedName("topic_id")
+    val topicID: String,
     @SerializedName("size")
     val size: String
 ){

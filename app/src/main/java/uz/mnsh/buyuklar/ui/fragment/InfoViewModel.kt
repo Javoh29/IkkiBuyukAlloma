@@ -20,8 +20,8 @@ class InfoViewModel(
         _index.value = index
     }
 
-    fun getFirst(index: Int) = lazyDeferred{
-        audiosRepository.getFirst(index)
+    fun getFirst(topID: String, index: Int) = lazyDeferred{
+        audiosRepository.getFirst(topID, index)
     }
 
 }
