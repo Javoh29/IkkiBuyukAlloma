@@ -26,7 +26,8 @@ import uz.mnsh.buyuklar.utils.FragmentAction
 import java.io.File
 import kotlin.coroutines.CoroutineContext
 
-class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, KodeinAware, FragmentAction {
+class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, KodeinAware,
+    FragmentAction {
 
     override val kodein by closestKodein()
     private val viewModelFactory: PageViewModelFactory by instance()
@@ -60,12 +61,12 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
     }
 
     private fun loadData(index: Int) = launch {
-        if (index == 1){
+        if (index == 1) {
             pageViewModel.getAudios(10).value.await().observe(viewLifecycleOwner, Observer {
                 if (it == null) return@Observer
                 bindUI(it)
             })
-        }else{
+        } else {
             pageViewModel.getAudios(11).value.await().observe(viewLifecycleOwner, Observer {
                 if (it == null) return@Observer
                 bindUI(it)
@@ -73,7 +74,7 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
         }
     }
 
-    private fun bindUI(audioModel: List<AudioModel>){
+    private fun bindUI(audioModel: List<AudioModel>) {
         if (audioModel.isNotEmpty()) {
             listAudioFile.clear()
             File(App.DIR_PATH + "${audioModel[0].topicID}/").walkTopDown().forEach { file ->
@@ -86,7 +87,11 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
                     listAudioFile.add(sm)
                 }
             }
-            mAdapter = AudiosAdapter(audioModel, listAudioFile, this)
+            val l = LinkedHashMap<String, SongModel>()
+            listAudioFile.forEach {
+                l[it.name] = it
+            }
+            mAdapter = AudiosAdapter(audioModel, l, this)
             recyclerView.adapter = mAdapter
             recyclerView.visibility = View.VISIBLE
             spinKitView?.visibility = View.GONE
@@ -95,10 +100,10 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
                 if (it == null) return@Observer
                 var play = true
                 audioModel.forEachIndexed { i, model ->
-                    if (model.name == mPlayerAdapter!!.getCurrentSong()?.name){
-                        if (it){
+                    if (model.name == mPlayerAdapter!!.getCurrentSong()?.name) {
+                        if (it) {
                             mAdapter?.isPlay = i
-                        }else mAdapter?.isPlay = -1
+                        } else mAdapter?.isPlay = -1
                         play = false
                     }
                 }
@@ -127,15 +132,15 @@ class PlaceholderFragment : Fragment(R.layout.fragment_main), CoroutineScope, Ko
     }
 
     override fun itemPlay(model: SongModel) {
-        if (mPlayerAdapter != null){
+        if (mPlayerAdapter != null) {
             isSavedSong = false
-            if (mPlayerAdapter!!.getCurrentSong()?.name == model.name){
-                if (mPlayerAdapter!!.getMediaPlayer() != null){
+            if (mPlayerAdapter!!.getCurrentSong()?.name == model.name) {
+                if (mPlayerAdapter!!.getMediaPlayer() != null) {
                     mPlayerAdapter!!.resumeOrPause()
-                }else{
+                } else {
                     mPlayerAdapter!!.initMediaPlayer()
                 }
-            }else{
+            } else {
                 mPlayerAdapter!!.setCurrentSong(model, listAudioFile)
                 mPlayerAdapter!!.initMediaPlayer()
             }

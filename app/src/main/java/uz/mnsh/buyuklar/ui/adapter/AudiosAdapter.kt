@@ -1,7 +1,6 @@
 package uz.mnsh.buyuklar.ui.adapter
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -23,7 +22,7 @@ import uz.mnsh.buyuklar.utils.FragmentAction
 
 class AudiosAdapter(
     audiosModel: List<AudioModel>,
-    private var fileList: ArrayList<SongModel>,
+    private var fileList: LinkedHashMap<String, SongModel>,
     private val fragmentAction: FragmentAction
 ) :
     RecyclerView.Adapter<AudiosAdapter.AudiosViewHolder>() {
@@ -40,7 +39,6 @@ class AudiosAdapter(
         val progressBar: ProgressBar = view.findViewById(R.id.progress)
         val download: AppCompatImageView = view.findViewById(R.id.download)
         val constraintLayout: ConstraintLayout = view.findViewById(R.id.constraintLayout)
-        val mContext: Context = view.context
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AudiosViewHolder {
@@ -66,24 +64,20 @@ class AudiosAdapter(
         holder.download.setImageResource(R.drawable.download)
         holder.download.visibility = View.VISIBLE
         holder.progressBar.visibility = View.GONE
-        fileList.forEach {
-            if (it.name == listModel[position].name) {
-                holder.download.setImageResource(R.drawable.play)
-                holder.download.visibility = View.VISIBLE
-                holder.progressBar.visibility = View.GONE
-                if (isPlay == position) {
-                    holder.download.setImageResource(R.drawable.stop)
-                }
+        if (fileList[listModel[position].name] != null) {
+            holder.download.setImageResource(R.drawable.play)
+            holder.download.visibility = View.VISIBLE
+            holder.progressBar.visibility = View.GONE
+            if (isPlay == position) {
+                holder.download.setImageResource(R.drawable.stop)
             }
         }
 
         holder.constraintLayout.setOnClickListener {
             var isLoad = true
-            fileList.forEach {
-                if (it.name == listModel[position].name){
-                    isLoad = false
-                    fragmentAction.itemPlay(it)
-                }
+            if (fileList[listModel[position].name] != null) {
+                isLoad = false
+                fragmentAction.itemPlay(fileList[listModel[position].name]!!)
             }
             if (isLoad){
                 startDownload(position, holder)
@@ -91,11 +85,9 @@ class AudiosAdapter(
         }
         holder.download.setOnClickListener {
             var isLoad = true
-            fileList.forEach {
-                if (it.name == listModel[position].name){
-                    isLoad = false
-                    fragmentAction.itemPlay(it)
-                }
+            if (fileList[listModel[position].name] != null) {
+                isLoad = false
+                fragmentAction.itemPlay(fileList[listModel[position].name]!!)
             }
             if (isLoad){
                 startDownload(position, holder)
@@ -123,12 +115,10 @@ class AudiosAdapter(
                 }
                 .start(object : OnDownloadListener {
                     override fun onDownloadComplete() {
-                        fileList.add(
-                            SongModel(
-                                name = listModel[index].name,
-                                songPath = "${App.DIR_PATH}${listModel[index].rn}/${listModel[index].getFileName()}",
-                                topicID = listModel[index].rn.toInt()
-                            )
+                        fileList[listModel[index].name] = SongModel(
+                            name = listModel[index].name,
+                            songPath = "${App.DIR_PATH}${listModel[index].rn}/${listModel[index].getFileName()}",
+                            topicID = listModel[index].rn.toInt()
                         )
                         notifyItemChanged(index)
                         idList.remove(index)
